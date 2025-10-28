@@ -1,35 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:walk_algarve_app/views/context/auth_provider.dart';
-import 'package:walk_algarve_app/views/screens/homepage_screen.dart';
 import 'dart:convert';
-import 'package:provider/provider.dart';
 
+import 'package:walk_algarve_app/views/screens/login_screen.dart'; // importe sua tela de login aqui
 
-import 'package:walk_algarve_app/views/screens/register_screen.dart';
-
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  // Controladores para capturar os valores dos TextFields
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
 
-  Future<void> _loginUser() async {
-    print("Login button pressed");
+  // Função para enviar dados para o backend
+  Future<void> _registerUser() async {
+    final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
       );
       return;
     }
@@ -39,37 +46,38 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final url = Uri.parse("http://10.0.2.2:8000/api/auth/login/");
+      final url = Uri.parse("http://10.0.2.2:8000/api/auth/register/");
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode({
+          'username': username,
+          'email': email,
+          'password': password,
+        }),
       );
 
-      if (response.statusCode == 200) {
-        // Login bem-sucedido
-        final data = jsonDecode(response.body);
-        // Exemplo: pegar token retornado do backend
-        String token = data['token'] ?? '';
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
-        await Provider.of<AuthProvider>(context, listen: false).setToken(token);
-
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Registro bem-sucedido
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful!')),
+          const SnackBar(content: Text('Registration successful! Please login.')),
         );
-
-        // Aqui você pode navegar para a tela principal da app, passando o token se necessário
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomepageScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
       } else {
         // Erro do backend
         final data = jsonDecode(response.body);
-        String errorMessage = data['detail'] ?? 'Login failed';
+        print(data);
+        String errorMessage = data['detail'] ?? 'Registration failed';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
+        print(errorMessage);
       }
     } catch (e) {
+      // Erro de rede ou exceção
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
       );
@@ -82,8 +90,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -101,10 +111,25 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
               const Text(
-                'Login',
+                'Register',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+
+              // Username Input
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                child: TextField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
 
               // Email Input
               Padding(
@@ -135,42 +160,34 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 15),
+
+              // Confirm Password Input
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                child: TextField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirm Password',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
 
-              // Login Button
+              // Register Button
               SizedBox(
                 width: 150,
                 height: 40,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _loginUser,
+                  onPressed: _isLoading ? null : _registerUser,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                      : const Text('Login'),
+                      : const Text('Register'),
                 ),
-              ),
-              const SizedBox(height: 30),
-
-              // Register link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                      );
-                    },
-                    child: const Text(
-                      "Register",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
