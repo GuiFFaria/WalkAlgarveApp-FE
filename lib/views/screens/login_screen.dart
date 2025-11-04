@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
-import 'package:walk_algarve_app/views/screens/homepage_screen.dart';
+import 'package:walk_algarve_app/views/screens/trails_list_screen.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 
@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // ✅ Navegar para homepage
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomepageScreen()),
+          MaterialPageRoute(builder: (context) => const TrailsListScreen()),
         );
       } else {
         final data = jsonDecode(response.body);

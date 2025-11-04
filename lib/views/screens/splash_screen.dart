@@ -2,8 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
-import 'package:walk_algarve_app/views/screens/homepage_screen.dart';
+import 'package:walk_algarve_app/views/screens/trails_list_screen.dart';
 import 'package:walk_algarve_app/views/screens/landingpage_screen.dart';
+import 'package:walk_algarve_app/views/screens/zones_list_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -38,10 +39,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (authProvider.isLoggedIn) {
       // Mesmo offline, o token guardado permite entrar
-      print("User is logged in, navigating to HomepageScreen");
+      print("User is logged in, navigating to ZonesListScreen");
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomepageScreen()),
+        MaterialPageRoute(builder: (_) => const ZonesListScreen()),
       );
     } else {
       // Se não há token, mas está offline — mostra aviso

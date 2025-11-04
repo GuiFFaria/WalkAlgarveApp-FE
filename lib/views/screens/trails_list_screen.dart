@@ -9,14 +9,14 @@ import 'package:walk_algarve_app/views/components/custom_appbar_widget.dart';
 import 'package:walk_algarve_app/views/components/custom_drawer_widget.dart';
 import 'package:walk_algarve_app/views/components/trail_card_widget.dart';
 
-class HomepageScreen extends StatefulWidget {
-  const HomepageScreen({super.key});
+class TrailsListScreen extends StatefulWidget {
+  const TrailsListScreen({super.key});
 
   @override
-  State<HomepageScreen> createState() => _HomepageScreenState();
+  State<TrailsListScreen> createState() => _TrailsListScreenState();
 }
 
-class _HomepageScreenState extends State<HomepageScreen> {
+class _TrailsListScreenState extends State<TrailsListScreen> {
   List<dynamic> trails = [];
   bool isLoading = true;
   bool isOffline = false;

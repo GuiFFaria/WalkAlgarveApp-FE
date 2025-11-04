@@ -28,7 +28,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     final imageUrl = trail['properties']["thumbnail_url"]?.toString() ?? "";
     final distance = trail['properties']["distance_km"]?.toString() ?? "-";
     final duration = trail['properties']["duration_min"]?.toString() ?? "-";
-    final type = trail['properties']["type"]?.toString().toLowerCase() ?? "-";
+    final type = trail['properties']["trail_type"]?.toString().toLowerCase() ?? "-";
     final difficulty = trail['properties']["difficulty"]?.toString() ?? "-";
 
     return GestureDetector(
@@ -124,7 +124,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
                       runSpacing: 4,
                       children: [
                         _info(Icons.place, distance, suffix: " km"),
-                        _info(Icons.timer, duration, suffix: " min"),
+                        _info(Icons.timer, duration, suffix: " h"),
                         _info(Icons.loop, type),
                         _info(Icons.flag, difficulty),
                       ],
