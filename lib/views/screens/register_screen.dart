@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-import 'package:walk_algarve_app/views/screens/login_screen.dart'; // importe sua tela de login aqui
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:connectivity_plus/connectivity_plus.dart'; // 👈 Import necessário
+import 'package:walk_algarve_app/views/screens/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,7 +13,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controladores para capturar os valores dos TextFields
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -20,13 +20,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _isLoading = false;
 
-  // Função para enviar dados para o backend
+  /// 🔹 Função para verificar se há conexão com a internet
+  Future<bool> _hasInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final hasInternet = connectivityResult != ConnectivityResult.none;
+    print("🌐 Internet connectivity: $hasInternet");
+    return hasInternet;
+  }
+
+  /// 🔹 Função para efetuar o registo
   Future<void> _registerUser() async {
     final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
-    final password = _passwordController.text;
+    final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text;
+    final String baseUrl = dotenv.env['API_BASE_URL']!;
 
+    // 🧠 Verificação de campos obrigatórios
     if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
@@ -34,6 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // ⚠️ Senhas diferentes
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwords do not match')),
@@ -41,12 +52,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    // 🌐 Verificação de internet
+    final hasInternet = await _hasInternetConnection();
+    if (!hasInternet) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must be connected to the internet to register.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse("http://10.0.2.2:8000/api/auth/register/");
+      final url = Uri.parse('$baseUrl/auth/register/');
+      print("📡 Attempting registration at: $url");
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -57,34 +79,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }),
       );
 
+      print("📦 Response status: ${response.statusCode}");
+      print("📦 Response body: ${response.body}");
+
       if (response.statusCode == 201 || response.statusCode == 200) {
-        // Registro bem-sucedido
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Registration successful! Please login.')),
         );
+
+        // 🟢 Vai para o login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       } else {
-        // Erro do backend
         final data = jsonDecode(response.body);
-        print(data);
-        String errorMessage = data['detail'] ?? 'Registration failed';
+        String errorMessage = data['detail'] ??
+            data['message'] ??
+            data['error'] ??
+            'Registration failed';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
-        print(errorMessage);
+        print("❌ Registration error: $errorMessage");
       }
     } catch (e) {
-      // Erro de rede ou exceção
+      print("❌ Exception during registration: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -117,65 +142,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 20),
 
               // Username Input
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: TextField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  ),
-                ),
-              ),
+              _inputField(_usernameController, 'Username'),
               const SizedBox(height: 15),
 
               // Email Input
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  ),
-                ),
-              ),
+              _inputField(_emailController, 'Email'),
               const SizedBox(height: 15),
 
               // Password Input
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  ),
-                ),
-              ),
+              _inputField(_passwordController, 'Password', obscure: true),
               const SizedBox(height: 15),
 
               // Confirm Password Input
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: TextField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm Password',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  ),
-                ),
-              ),
+              _inputField(_confirmPasswordController, 'Confirm Password', obscure: true),
               const SizedBox(height: 20),
 
               // Register Button
@@ -191,6 +170,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// 🔹 Helper para campos de input
+  Widget _inputField(TextEditingController controller, String label, {bool obscure = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         ),
       ),
     );

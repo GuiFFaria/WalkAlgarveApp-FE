@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
@@ -23,9 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   Future<void> _loginUser() async {
-    print("Login button pressed");
+    print("🔐 [Login] Login button pressed");
     final email = _emailController.text.trim();
     final password = _passwordController.text;
+    String baseUrl = dotenv.env['API_BASE_URL']!;
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -39,37 +41,60 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final url = Uri.parse("http://10.0.2.2:8000/api/auth/login/");
+      final url = Uri.parse("$baseUrl/auth/login/");
+      print("🌍 Sending login request to: $url");
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
 
+      print("📡 Response status: ${response.statusCode}");
+      print("📦 Response body: ${response.body}");
+
       if (response.statusCode == 200) {
-        // Login bem-sucedido
         final data = jsonDecode(response.body);
-        // Exemplo: pegar token retornado do backend
-        String token = data['token'] ?? '';
+
+        // ✅ Extrair tokens conforme estrutura do backend
+        final accessToken = data['access'];
+        final refreshToken = data['refresh'];
+        final user = data['user'];
+
+        print("✅ Access token: ${accessToken != null ? 'OK' : 'null'}");
+        print("🔄 Refresh token: ${refreshToken != null ? 'OK' : 'null'}");
+        print("👤 User: $user");
+
+        if (accessToken == null || accessToken.isEmpty) {
+          throw Exception("Access token not found in response!");
+        }
+
+        // ✅ Guardar tokens localmente
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
-        await Provider.of<AuthProvider>(context, listen: false).setToken(token);
+        await prefs.setString('auth_token', accessToken);
+        await prefs.setString('refresh_token', refreshToken ?? '');
+        await Provider.of<AuthProvider>(context, listen: false).setToken(accessToken);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful!')),
         );
 
-        // Aqui você pode navegar para a tela principal da app, passando o token se necessário
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomepageScreen()));
+        // ✅ Navegar para homepage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomepageScreen()),
+        );
       } else {
-        // Erro do backend
         final data = jsonDecode(response.body);
         String errorMessage = data['detail'] ?? 'Login failed';
+        print("❌ Login error: $errorMessage");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print("❌ Exception during login: $e");
+      print(stack);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
       );
