@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart'; // 👈 Import necessário
 import 'package:walk_algarve_app/views/screens/login_screen.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -135,8 +136,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: 150,
               ),
               const SizedBox(height: 30),
-              const Text(
-                'Register',
+              Text(
+                AppLocalizations.of(context)!.register,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
@@ -165,7 +166,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _isLoading ? null : _registerUser,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                      : const Text('Register'),
+                      : Text(AppLocalizations.of(context)!.register),
                 ),
               ),
             ],

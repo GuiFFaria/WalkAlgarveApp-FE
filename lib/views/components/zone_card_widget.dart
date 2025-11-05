@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/screens/zone_details_screen.dart';
 
 class ZoneCardWidget extends StatefulWidget {
@@ -133,7 +134,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                   color: Colors.black.withOpacity(0.7),
                   alignment: Alignment.center,
                   child: Text(
-                    "See more",
+                    AppLocalizations.of(context)!.seeMore,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,

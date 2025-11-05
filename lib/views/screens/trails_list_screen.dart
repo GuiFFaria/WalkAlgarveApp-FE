@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +7,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar_widget.dart';
 import 'package:walk_algarve_app/views/components/custom_drawer_widget.dart';
 import 'package:walk_algarve_app/views/components/trail_card_widget.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 class TrailsListScreen extends StatefulWidget {
   const TrailsListScreen({super.key});
@@ -107,7 +107,7 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     return Scaffold(
       drawer: CustomDrawerWidget(),
       appBar: CustomAppBarWidget(
-        title: isOffline ? "Trails (Offline)" : "Trails",
+        title: isOffline ? "${AppLocalizations.of(context)!.trails}(Offline)" : AppLocalizations.of(context)!.trails,
         onFilterPressed: () => debugPrint("Filtro pressionado!"),
       ),
       body: SafeArea(

@@ -1,0 +1,17 @@
+{
+  "appTitle": "Walk Algarve",
+  "aboutZone": "About this zone",
+  "viewTrails": "View Trails",
+  "unlockZone": "Buy Zone",
+  "seeMore": "See More",
+  "login": "Login",
+  "register": "Register",
+  "settings": "Settings",
+  "profile": "Profile",
+  "logout": "Logout",
+  "account": "Don't have an account?",
+  "history": "History",
+  "trails": "Trails",
+  "zones": "Zones",
+  "no_zones_available": "No zones available."
+}

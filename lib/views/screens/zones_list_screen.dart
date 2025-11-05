@@ -8,6 +8,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar_widget.dart';
 import 'package:walk_algarve_app/views/components/custom_drawer_widget.dart';
 import 'package:walk_algarve_app/views/components/zone_card_widget.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 class ZonesListScreen extends StatefulWidget {
   const ZonesListScreen({super.key});
@@ -150,8 +151,7 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
     return Scaffold(
       drawer: CustomDrawerWidget(),
       appBar: CustomAppBarWidget(
-        title: isOffline ? "Zones (Offline)" : "Zones",
-        onFilterPressed: () => debugPrint("Filtro pressionado!"),
+        title: isOffline ? "${AppLocalizations.of(context)!.zones}(Offline)" : AppLocalizations.of(context)!.zones,
       ),
       body: SafeArea(
         child: isLoading
@@ -168,7 +168,7 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
                       },
                     ),
                   )
-                : const Center(child: Text("Nenhuma zona encontrada.")),
+                : Center(child: Text(AppLocalizations.of(context)!.no_zones_available)),
       ),
     );
   }

@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:walk_algarve_app/views/context/locale_provider.dart';
 
 class CustomAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback? onMenuPressed;
-  final VoidCallback? onFilterPressed;
 
   const CustomAppBarWidget({
     Key? key,
     required this.title,
     this.onMenuPressed,
-    this.onFilterPressed,
   });
 
-  // Altura padrão da AppBar
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = Localizations.localeOf(context).languageCode.toUpperCase();
+
     return AppBar(
-      backgroundColor:Color(0xFF1BA6A1),
+      backgroundColor: const Color(0xFF1BA6A1),
       elevation: 2,
       centerTitle: true,
       title: Text(
@@ -29,27 +30,31 @@ class CustomAppBarWidget extends StatelessWidget implements PreferredSizeWidget 
           fontWeight: FontWeight.bold,
         ),
       ),
-      // Usamos Builder para garantir que o context aqui tem acesso ao Scaffold
+
       leading: Builder(
         builder: (innerContext) {
           return IconButton(
             icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: onMenuPressed ??
-                () {
-                  // Abre o drawer do Scaffold pai
-                  Scaffold.of(innerContext).openDrawer();
-                },
+            onPressed: onMenuPressed ?? () => Scaffold.of(innerContext).openDrawer(),
           );
         },
       ),
+
       actions: [
-        IconButton(
-          icon: const Icon(Icons.filter_alt_outlined, color: Colors.white),
-          onPressed: onFilterPressed ?? () {},
+        // 🔄 Botão de troca de idioma
+        TextButton(
+          onPressed: () => context.read<LocaleProvider>().toggleLocale(),
+          child: Text(
+            currentLocale,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ),
+        const SizedBox(width: 6),
       ],
-      // Garantir ícones escuros no tema claro
-      iconTheme: const IconThemeData(color: Colors.black87),
     );
   }
 }

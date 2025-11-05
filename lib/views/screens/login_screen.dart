@@ -3,9 +3,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
-import 'package:walk_algarve_app/views/screens/trails_list_screen.dart';
+import 'package:walk_algarve_app/views/screens/zones_list_screen.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 
 import 'package:walk_algarve_app/views/screens/register_screen.dart';
@@ -82,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // ✅ Navegar para homepage
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const TrailsListScreen()),
+          MaterialPageRoute(builder: (context) => const ZonesListScreen()),
         );
       } else {
         final data = jsonDecode(response.body);
@@ -125,8 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: 150,
               ),
               const SizedBox(height: 30),
-              const Text(
-                'Login',
+              Text(
+                AppLocalizations.of(context)!.login,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
@@ -179,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account? "),
+                  Text(AppLocalizations.of(context)!.account),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -187,8 +188,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         MaterialPageRoute(builder: (context) => const RegisterScreen()),
                       );
                     },
-                    child: const Text(
-                      "Register",
+                    child: Text(
+                      AppLocalizations.of(context)!.register,
                       style: TextStyle(
                         color: Colors.blue,
                         decoration: TextDecoration.underline,
