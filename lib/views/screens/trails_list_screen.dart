@@ -108,7 +108,6 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
       drawer: CustomDrawerWidget(),
       appBar: CustomAppBarWidget(
         title: isOffline ? "${AppLocalizations.of(context)!.trails}(Offline)" : AppLocalizations.of(context)!.trails,
-        onFilterPressed: () => debugPrint("Filtro pressionado!"),
       ),
       body: SafeArea(
         child: isLoading

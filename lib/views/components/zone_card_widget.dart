@@ -18,7 +18,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
   Widget build(BuildContext context) {
     final zone = widget.zone;
 
-    final title = zone['name']?.toString() ?? "Sem título";
+    final title = zone['translations']?.toString() ?? "Sem título";
     final imageUrl = zone["thumbnail_url"]?.toString() ?? "";
     final municipalityName = zone["municipality"]?["name"]?.toString() ?? "-";
 

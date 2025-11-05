@@ -84,7 +84,7 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
             .map<Map<String, dynamic>>(
                 (zone) => Map<String, dynamic>.from(zone))
             .toList();
-
+        debugPrint("🌍 $zones");
         await prefs.setString('cached_zones', jsonEncode(zones));
         debugPrint("💾 ${zones.length} zonas guardadas localmente.");
       } else {
