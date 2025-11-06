@@ -52,4 +52,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get no_zones_available => 'No zones available.';
+
+  @override
+  String get no_trails_available => 'No trails available.';
 }

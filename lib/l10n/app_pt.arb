@@ -13,5 +13,6 @@
   "history": "Histórico",
   "trails": "Trilhos",
   "zones": "Zonas",
-  "no_zones_available": "Nenhuma zona disponível."
+  "no_zones_available": "Nenhuma zona disponível.",
+  "no_trails_available": "Nenhum trilho disponível."
 }

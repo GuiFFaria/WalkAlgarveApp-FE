@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/screens/zone_details_screen.dart';
 
 class ZoneCardWidget extends StatefulWidget {
@@ -17,11 +19,13 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
   @override
   Widget build(BuildContext context) {
     final zone = widget.zone;
+    final locale = context.watch<LocaleProvider>().locale.languageCode;
 
-    final title = zone['translations']?.toString() ?? "Sem título";
+    final title = locale == "pt"
+      ? (zone['translations']?['pt']?['name']?.toString() ?? '')
+      : (zone['translations']?['en']?['name']?.toString() ?? '');
     final imageUrl = zone["thumbnail_url"]?.toString() ?? "";
     final municipalityName = zone["municipality"]?["name"]?.toString() ?? "-";
-
     final bool userHasZone = zone["user_have"] == true;
 
     return Container(
@@ -79,7 +83,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title!,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,

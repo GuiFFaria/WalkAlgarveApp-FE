@@ -52,4 +52,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get no_zones_available => 'Nenhuma zona disponível.';
+
+  @override
+  String get no_trails_available => 'Nenhum trilho disponível.';
 }

@@ -13,5 +13,6 @@
   "history": "History",
   "trails": "Trails",
   "zones": "Zones",
-  "no_zones_available": "No zones available."
+  "no_zones_available": "No zones available.",
+  "no_trails_available": "No trails available."
 }

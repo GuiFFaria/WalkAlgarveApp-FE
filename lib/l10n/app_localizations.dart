@@ -187,6 +187,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No zones available.'**
   String get no_zones_available;
+
+  /// No description provided for @no_trails_available.
+  ///
+  /// In en, this message translates to:
+  /// **'No trails available.'**
+  String get no_trails_available;
 }
 
 class _AppLocalizationsDelegate

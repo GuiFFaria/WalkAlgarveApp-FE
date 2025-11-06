@@ -10,7 +10,12 @@ import 'package:walk_algarve_app/views/components/trail_card_widget.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 class TrailsListScreen extends StatefulWidget {
-  const TrailsListScreen({super.key});
+  final int zoneId;
+
+  const TrailsListScreen({
+    super.key,
+    required this.zoneId,
+  });
 
   @override
   State<TrailsListScreen> createState() => _TrailsListScreenState();
@@ -27,34 +32,37 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     loadTrails();
   }
 
+  /// Cache key única por zona
+  String get cacheKey => "cached_trails_zone_${widget.zoneId}";
+
   /// 🔌 Verifica a conexão à internet
   Future<bool> checkConnection() async {
     final connectivityResult = await Connectivity().checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
   }
 
-  /// 🌐 Carrega os trilhos — API ou cache local
+  /// 🌐 Carrega trilhos (API se online, cache se offline)
   Future<void> loadTrails() async {
     setState(() => isLoading = true);
 
     final hasInternet = await checkConnection();
 
     if (hasInternet) {
-      debugPrint("✅ Online - Fetching from API...");
+      debugPrint("✅ Online - Fetching trails for zone ${widget.zoneId}");
       await fetchTrailsFromApi();
     } else {
-      debugPrint("⚠️ Offline - Loading cached data...");
+      debugPrint("⚠️ Offline - Loading cached trails for zone ${widget.zoneId}");
       await loadTrailsFromCache();
     }
 
     setState(() => isLoading = false);
   }
 
-  /// 🌍 Busca dados da API e guarda em cache
+  /// 🛰️ Busca trilhos da API e guarda em cache
   Future<void> fetchTrailsFromApi() async {
     try {
       final baseUrl = dotenv.env['API_BASE_URL']!;
-      final url = Uri.parse("$baseUrl/trails/");
+      final url = Uri.parse("$baseUrl/trails/?zone=${widget.zoneId}");
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -66,25 +74,24 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
           isOffline = false;
         });
 
-        // 💾 Guarda localmente os dados
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('cached_trails', jsonEncode(trails));
+        await prefs.setString(cacheKey, jsonEncode(trails));
 
-        debugPrint("💾 Dados guardados localmente (${trails.length} trilhos).");
+        debugPrint("💾 ${trails.length} trilhos guardados em cache (zona ${widget.zoneId}).");
       } else {
-        debugPrint("Erro ao buscar trilhos: ${response.body}");
-        await loadTrailsFromCache(); // fallback
+        debugPrint("❌ Erro ao buscar trilhos: ${response.body}");
+        await loadTrailsFromCache();
       }
     } catch (e) {
-      debugPrint("Erro de conexão: $e");
-      await loadTrailsFromCache(); // fallback
+      debugPrint("⚠️ Erro de conexão: $e");
+      await loadTrailsFromCache();
     }
   }
 
-  /// 💾 Carrega dados guardados localmente
+  /// 💾 Carrega trilhos guardados localmente
   Future<void> loadTrailsFromCache() async {
     final prefs = await SharedPreferences.getInstance();
-    final cachedData = prefs.getString('cached_trails');
+    final cachedData = prefs.getString(cacheKey);
 
     if (cachedData != null) {
       final cachedList = jsonDecode(cachedData) as List<dynamic>;
@@ -92,13 +99,13 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
         trails = List<Map<String, dynamic>>.from(cachedList);
         isOffline = true;
       });
-      debugPrint("📦 ${trails.length} trilhos carregados do cache.");
+      debugPrint("📦 ${trails.length} trilhos carregados do cache (zona ${widget.zoneId}).");
     } else {
       setState(() {
         trails = [];
         isOffline = true;
       });
-      debugPrint("❌ Nenhum dado em cache disponível.");
+      debugPrint("❌ Nenhum cache disponível para zona ${widget.zoneId}.");
     }
   }
 
@@ -107,7 +114,9 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     return Scaffold(
       drawer: CustomDrawerWidget(),
       appBar: CustomAppBarWidget(
-        title: isOffline ? "${AppLocalizations.of(context)!.trails}(Offline)" : AppLocalizations.of(context)!.trails,
+        title: isOffline
+            ? "${AppLocalizations.of(context)!.trails} (Offline)"
+            : AppLocalizations.of(context)!.trails,
       ),
       body: SafeArea(
         child: isLoading
@@ -124,7 +133,7 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
                       },
                     ),
                   )
-                : const Center(child: Text("Nenhum trilho encontrado.")),
+                : Center(child: Text(AppLocalizations.of(context)!.no_trails_available)),
       ),
     );
   }

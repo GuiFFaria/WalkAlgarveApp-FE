@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/context/locale_provider.dart';
+import 'package:walk_algarve_app/views/screens/trails_list_screen.dart';
 
 class ZoneDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> zone;
@@ -7,9 +11,15 @@ class ZoneDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<LocaleProvider>().locale.languageCode;
+
     final imageUrl = zone["thumbnail_url"] ?? "";
-    final title = zone["name"] ?? "Sem título";
-    final description = zone["description"] ?? "Sem descrição disponível.";
+    final title = locale == "pt"
+      ? (zone['translations']?['pt']?['name']?.toString() ?? '')
+      : (zone['translations']?['en']?['name']?.toString() ?? '');
+    final description = locale == "pt"
+      ? (zone['translations']?['pt']?['description']?.toString() ?? 'Sem descrição disponível.')
+      : (zone['translations']?['en']?['description']?.toString() ?? 'No description available');
     final bool userHasZone = zone["user_have"] == true;
 
     return Scaffold(
@@ -44,7 +54,7 @@ class ZoneDetailsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start, // força alinhamento à esquerda
                   children: [
                     Text(
-                      "About this zone",
+                      AppLocalizations.of(context)!.aboutZone,
                       textAlign: TextAlign.left,
                       style: TextStyle(
                         fontSize: 20,
@@ -84,9 +94,9 @@ class ZoneDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (userHasZone) {
                   // Navega para trilhos da zona
-                  // Navigator.push(context, MaterialPageRoute(
-                  //   builder: (_) => TrailsListScreen(zoneId: zone["id"]),
-                  // ));
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => TrailsListScreen(zoneId: zone["id"]),
+                  ));
                 } else {
                   // Lógica de compra (p.ex. abrir checkout)
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +108,7 @@ class ZoneDetailsScreen extends StatelessWidget {
                 }
               },
               child: Text(
-                userHasZone ? "View trails" : "Unlock zone",
+                userHasZone ? AppLocalizations.of(context)!.viewTrails : AppLocalizations.of(context)!.unlockZone,
                 style: const TextStyle(
                     fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
               ),

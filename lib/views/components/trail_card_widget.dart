@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
+import 'package:walk_algarve_app/views/context/locale_provider.dart';
+import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
 
 class TrailCardWidget extends StatefulWidget {
   final Map<String, dynamic> trail;
@@ -24,7 +27,15 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
   Widget build(BuildContext context) {
     final trail = widget.trail;
 
-    final title = trail['properties']['name']?.toString() ?? "Sem título";
+    final locale = context.watch<LocaleProvider>().locale.languageCode;
+
+
+    final title = TranslationHelper.getValue(
+      trail,
+      locale,
+      "name",
+      fallback: 'Untitled Trail',
+    );
     final imageUrl = trail['properties']["thumbnail_url"]?.toString() ?? "";
     final distance = trail['properties']["distance_km"]?.toString() ?? "-";
     final duration = trail['properties']["duration_min"]?.toString() ?? "-";
