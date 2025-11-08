@@ -6,25 +6,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar_widget.dart';
 import 'package:walk_algarve_app/views/components/custom_drawer_widget.dart';
-import 'package:walk_algarve_app/views/components/trail_card_widget.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/components/trail_card_widget.dart';
+
 
 class TrailsListScreen extends StatefulWidget {
   final int zoneId;
 
-  const TrailsListScreen({
-    super.key,
-    required this.zoneId,
-  });
+  const TrailsListScreen({super.key, required this.zoneId});
 
   @override
   State<TrailsListScreen> createState() => _TrailsListScreenState();
 }
 
 class _TrailsListScreenState extends State<TrailsListScreen> {
-  List<dynamic> trails = [];
+  List<Map<String, dynamic>> trails = [];
   bool isLoading = true;
   bool isOffline = false;
+
+  String get cacheKey => "cached_trails_zone_${widget.zoneId}";
+  String get pendingKey => "pending_favorites";
 
   @override
   void initState() {
@@ -32,10 +33,7 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     loadTrails();
   }
 
-  /// Cache key única por zona
-  String get cacheKey => "cached_trails_zone_${widget.zoneId}";
-
-  /// 🔌 Verifica a conexão à internet
+  /// 🔌 Verifica conexão
   Future<bool> checkConnection() async {
     final connectivityResult = await Connectivity().checkConnectivity();
     return connectivityResult != ConnectivityResult.none;
@@ -44,68 +42,121 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   /// 🌐 Carrega trilhos (API se online, cache se offline)
   Future<void> loadTrails() async {
     setState(() => isLoading = true);
-
     final hasInternet = await checkConnection();
 
     if (hasInternet) {
-      debugPrint("✅ Online - Fetching trails for zone ${widget.zoneId}");
       await fetchTrailsFromApi();
+      await syncPendingFavorites();
     } else {
-      debugPrint("⚠️ Offline - Loading cached trails for zone ${widget.zoneId}");
       await loadTrailsFromCache();
     }
 
     setState(() => isLoading = false);
   }
 
-  /// 🛰️ Busca trilhos da API e guarda em cache
+  /// 🛰️ Busca trilhos da API
   Future<void> fetchTrailsFromApi() async {
     try {
       final baseUrl = dotenv.env['API_BASE_URL']!;
       final url = Uri.parse("$baseUrl/trails/?zone=${widget.zoneId}");
-      final response = await http.get(url);
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      final response = await http.get(
+        url,
+        headers: token != null ? {'Authorization': 'Bearer $token'} : {},
+      );
 
       if (response.statusCode == 200) {
-        final decodedJson = jsonDecode(response.body) as Map<String, dynamic>;
-        final decodedTrails = decodedJson['features'] as List<dynamic>;
+        final decoded = jsonDecode(response.body);
 
-        setState(() {
-          trails = List<Map<String, dynamic>>.from(decodedTrails);
-          isOffline = false;
-        });
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(cacheKey, jsonEncode(trails));
-
-        debugPrint("💾 ${trails.length} trilhos guardados em cache (zona ${widget.zoneId}).");
+        if (decoded is List) {
+          debugPrint("✅ Trilhos carregados da API (${decoded.length})");
+          setState(() {
+            trails = List<Map<String, dynamic>>.from(decoded);
+            isOffline = false;
+          });
+          await prefs.setString(cacheKey, jsonEncode(trails));
+        } else if (decoded is Map && decoded.containsKey("features")) {
+          final decodedTrails = decoded["features"] as List<dynamic>;
+          setState(() {
+            trails = List<Map<String, dynamic>>.from(decodedTrails);
+            isOffline = false;
+          });
+          await prefs.setString(cacheKey, jsonEncode(trails));
+        } else {
+          throw Exception("Formato inesperado: ${decoded.runtimeType}");
+        }
       } else {
-        debugPrint("❌ Erro ao buscar trilhos: ${response.body}");
+        debugPrint("⚠️ Falha no carregamento da API: ${response.statusCode}");
         await loadTrailsFromCache();
       }
     } catch (e) {
-      debugPrint("⚠️ Erro de conexão: $e");
+      debugPrint("⚠️ Erro API: $e");
       await loadTrailsFromCache();
     }
   }
 
-  /// 💾 Carrega trilhos guardados localmente
+  /// 💾 Carrega do cache
   Future<void> loadTrailsFromCache() async {
     final prefs = await SharedPreferences.getInstance();
-    final cachedData = prefs.getString(cacheKey);
-
-    if (cachedData != null) {
-      final cachedList = jsonDecode(cachedData) as List<dynamic>;
+    final cached = prefs.getString(cacheKey);
+    if (cached != null) {
       setState(() {
-        trails = List<Map<String, dynamic>>.from(cachedList);
+        trails = List<Map<String, dynamic>>.from(jsonDecode(cached));
         isOffline = true;
       });
-      debugPrint("📦 ${trails.length} trilhos carregados do cache (zona ${widget.zoneId}).");
     } else {
+      trails = [];
+    }
+  }
+
+  /// 🔁 Sincroniza favoritos pendentes (quando volta online)
+  Future<void> syncPendingFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pending = prefs.getString(pendingKey);
+    if (pending == null) return;
+
+    final List<Map<String, dynamic>> pendingList =
+        List<Map<String, dynamic>>.from(jsonDecode(pending));
+
+    if (pendingList.isEmpty) return;
+
+    final token = prefs.getString('auth_token');
+    if (token == null) return;
+
+    final baseUrl = dotenv.env['API_BASE_URL']!;
+    final url = Uri.parse("$baseUrl/trails/");
+
+    for (final fav in pendingList) {
+      try {
+        await http.post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({"trail_id": fav['trail_id']}),
+        );
+        debugPrint("✅ Sincronizado trail ${fav['trail_id']}");
+      } catch (e) {
+        debugPrint("⚠️ Erro ao sincronizar trail ${fav['trail_id']}: $e");
+      }
+    }
+
+    await prefs.remove(pendingKey);
+  }
+
+  /// 🔄 Callback quando o estado de favorito muda no TrailCardWidget
+  void onFavoriteToggled() async {
+    // Atualiza cache e estado
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString(cacheKey);
+    if (cached != null) {
       setState(() {
-        trails = [];
-        isOffline = true;
+        trails = List<Map<String, dynamic>>.from(jsonDecode(cached));
       });
-      debugPrint("❌ Nenhum cache disponível para zona ${widget.zoneId}.");
     }
   }
 
@@ -129,11 +180,17 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
                       itemCount: trails.length,
                       itemBuilder: (context, index) {
                         final trail = trails[index];
-                        return TrailCardWidget(trail, index);
+                        return TrailCardWidget(
+                          trail,
+                          index,
+                          onFavoriteToggled: onFavoriteToggled, // ✅ callback
+                        );
                       },
                     ),
                   )
-                : Center(child: Text(AppLocalizations.of(context)!.no_trails_available)),
+                : Center(
+                    child: Text(AppLocalizations.of(context)!.no_trails_available),
+                  ),
       ),
     );
   }
