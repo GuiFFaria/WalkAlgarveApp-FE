@@ -14,5 +14,8 @@
   "trails": "Trilhos",
   "zones": "Zonas",
   "no_zones_available": "Nenhuma zona disponível.",
-  "no_trails_available": "Nenhum trilho disponível."
+  "no_trails_available": "Nenhum trilho disponível.",
+  "select_municipality": "Selecionar município",
+  "welcome": "Bem-vindo ao Algarve",
+  "show_all": "Mostrar todas"
 }

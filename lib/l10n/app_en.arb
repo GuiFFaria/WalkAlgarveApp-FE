@@ -14,5 +14,8 @@
   "trails": "Trails",
   "zones": "Zones",
   "no_zones_available": "No zones available.",
-  "no_trails_available": "No trails available."
+  "no_trails_available": "No trails available.",
+  "select_municipality": "Select Municipality",
+  "welcome": "Welcome to Algarve",
+  "show_all": "Show All"
 }

@@ -67,7 +67,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       token = token.trim();
     }
 
-    debugPrint("🔑 Token enviado (40 chars): ${token != null ? token.substring(0, token.length > 40 ? 40 : token.length) : 'null'}");
+
 
     final baseUrl = dotenv.env['API_BASE_URL']!;
     final url = Uri.parse("$baseUrl/trails/");

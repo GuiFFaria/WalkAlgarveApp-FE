@@ -1,0 +1,59 @@
+OrderedDict([
+    ('type', 'FeatureCollection'), 
+    ('features', [ 
+        OrderedDict([
+            ('id', 6), 
+            ('type', 'Feature'), 
+            ('geometry', GeoJsonDict([
+            ])), 
+            ('properties',
+                OrderedDict([
+                    ('name', 'Seven Hanging Valleys Trail'), 
+                    ('difficulty', 'Moderate'), 
+                    ('distance_km', 12.0), 
+                    ('duration_min',6), 
+                    ('trail_type', 'LINEAR'),
+                    ('is_bike_friendly', False),
+                    ('description', 'Elected as one of the very best hikes in Europe by European best Destinations, the Seven Hanging Valleys Trail is not to be missed as this winding and fragrant trail that takes us through some of the most beautiful natural gems of the Algarve. Here, the turquoise ocean has conspired with the warm-coloured cliffs to create the quintessential Algarvian seascap and one of the most rewarding and memorable walks along the sun-kissed coastline. Know more at https: //www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'),
+                    ('thumbnail_url', 'https://www.walkalgarve.com/wp-content/uploads/2025/05/Seven-Hanging-Valleys-Trail-Sunset.webp'), 
+                    ('zone', {
+                        'id': 1, 
+                        'name': 'Faro', 
+                        'description': 'Qualquer coisa', 
+                        'thumbnail_url': 'https://www.walkalgarve.com/wp-content/uploads/2025/05/Seven-Hanging-Valleys-Trail-Sunset.webp',
+                        'municipality': {
+                            'id': 1, 
+                            'name': 'Faro', 
+                            'translations': []
+                        }, 
+                        'translations': {
+                            'pt': {
+                                'name': 'Faro', 
+                                'description': 'Descrição da zona de faro em português'
+                            }, 
+                            'en': {
+                                'name': 'Faro', 
+                                'description': "Faro's zone description in english"
+                            }
+                        }
+                    }),
+                    ('pois', OrderedDict([
+                    ])
+                    ), 
+                    ('translations', [
+                        {
+                            'language': 'en',
+                            'name': 'Seven Hanging Valleys Trail', 
+                            'description': 'Elected as one of the very best hikes in Europe by European best Destinations, the Seven Hanging Valleys Trail is not to be missed as this winding and fragrant trail that takes us through some of the most beautiful natural gems of the Algarve. Here, the turquoise ocean has conspired with the warm-coloured cliffs to create the quintessential Algarvian seascap and one of the most rewarding and memorable walks along the sun-kissed coastline. Know more at https://www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'
+                        },
+                        {
+                            'language': 'pt', 
+                            'name': 'Trilha dos Sete Vales Suspensos', 
+                            'description': 'Eleita uma das melhores trilhas da Europa pela European Best Destinations, a Trilha dos Sete Vales Suspensos é imperdível. Este percurso sinuoso e perfumado nos leva por algumas das mais belas joias naturais do Algarve. Aqui, o oceano turquesa se une às falésias de tons quentes para criar a paisagem marítima algarvia por excelência, proporcionando uma das caminhadas mais gratificantes e memoráveis \u200b\u200bao longo da costa ensolarada. Saiba mais em https://www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'
+                        }
+                    ])
+                ])
+            )
+        ])]
+    )
+])

@@ -193,6 +193,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No trails available.'**
   String get no_trails_available;
+
+  /// No description provided for @select_municipality.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Municipality'**
+  String get select_municipality;
+
+  /// No description provided for @welcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Algarve'**
+  String get welcome;
+
+  /// No description provided for @show_all.
+  ///
+  /// In en, this message translates to:
+  /// **'Show All'**
+  String get show_all;
 }
 
 class _AppLocalizationsDelegate

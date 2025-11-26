@@ -74,6 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', accessToken);
         await prefs.setString('refresh_token', refreshToken ?? '');
+        await prefs.setString('user', jsonEncode(user));
         await Provider.of<AuthProvider>(context, listen: false).setToken(accessToken);
 
         ScaffoldMessenger.of(context).showSnackBar(

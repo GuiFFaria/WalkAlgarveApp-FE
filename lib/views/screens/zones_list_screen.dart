@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -19,9 +18,15 @@ class ZonesListScreen extends StatefulWidget {
 
 class _ZonesListScreenState extends State<ZonesListScreen> {
   List<Map<String, dynamic>> zones = [];
+  List<Map<String, dynamic>> allZones = [];
+
   List<int> userZones = [];
+  List<String> municipios = [];
+
   bool isLoading = true;
   bool isOffline = false;
+
+  String? selectedMunicipio;
 
   @override
   void initState() {
@@ -35,17 +40,15 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  /// 🌐 Fluxo de carregamento (online / offline)
+  /// 🌐 Fluxo geral de carregamento
   Future<void> loadZones() async {
     setState(() => isLoading = true);
 
     final hasInternet = await checkConnection();
 
     if (hasInternet) {
-      debugPrint("✅ Online - Fetching from API...");
       await fetchZonesFromApi();
     } else {
-      debugPrint("⚠️ Offline - Loading cached data...");
       await loadZonesFromCache();
     }
 
@@ -61,7 +64,6 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      debugPrint("🔑 TOKEN USADO: $token");
 
       /// Request ZONES
       final zonesResponse = await http.get(zonesUrl);
@@ -76,18 +78,15 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
       if (zonesResponse.statusCode == 200) {
         final decoded = jsonDecode(zonesResponse.body);
 
-        final decodedZones = decoded is List
-            ? decoded
-            : decoded["zones"] ?? [];
+        final decodedZones =
+            decoded is List ? decoded : decoded["zones"] ?? [];
 
         zones = decodedZones
             .map<Map<String, dynamic>>(
                 (zone) => Map<String, dynamic>.from(zone))
             .toList();
+
         await prefs.setString('cached_zones', jsonEncode(zones));
-        debugPrint("💾 ${zones.length} zonas guardadas localmente.");
-      } else {
-        debugPrint("❌ Erro ao obter zonas: ${zonesResponse.statusCode}");
       }
 
       /// ---------------- USER ZONES ----------------
@@ -98,16 +97,13 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
             ? List<int>.from(decodedUserZones["zones_owned"])
             : [];
 
-        await prefs.setString('cached_user_zones', jsonEncode(userZones));
-        debugPrint("💾 ${userZones.length} zonas do utilizador guardadas localmente.");
-      } else {
-        debugPrint("❌ Erro ao obter zonas do user: ${userZonesResponse.statusCode}");
+        await prefs.setString(
+            'cached_user_zones', jsonEncode(userZones));
       }
 
       mergeZonesWithOwnership();
       isOffline = false;
     } catch (e) {
-      debugPrint("❌ Erro de conexão: $e");
       await loadZonesFromCache();
     }
   }
@@ -132,26 +128,185 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
 
     mergeZonesWithOwnership();
     isOffline = true;
-
-    debugPrint("📦 Zonas offline: ${zones.length}");
-    debugPrint("📦 User zones offline: ${userZones.length}");
   }
 
-  /// 🔄 Marca zonas que o user possui
+  /// 🔄 Marca zonas que o user possui + ordena
   void mergeZonesWithOwnership() {
     zones = zones.map((zone) {
-      final owns = userZones.contains(zone["id"]);
-      return {...zone, "user_have": owns};
+      return {
+        ...zone,
+        "user_have": userZones.contains(zone["id"]),
+      };
     }).toList();
+
+    zones.sort((a, b) {
+      return (b["user_have"] ? 1 : 0)
+          .compareTo(a["user_have"] ? 1 : 0);
+    });
+
+    allZones = List.from(zones);
+
+    extractMunicipios();
   }
+
+  /// 📌 Extrai Municípios (String ou Map)
+  void extractMunicipios() {
+    municipios = zones
+        .map<String>((z) {
+          final municipioField = z["municipality"];
+
+          if (municipioField == null) return "";
+
+          if (municipioField is String) return municipioField;
+
+          if (municipioField is Map &&
+              municipioField["name"] != null) {
+            return municipioField["name"];
+          }
+
+          return "";
+        })
+        .where((m) => m.isNotEmpty)
+        .toSet()
+        .toList();
+
+    municipios.sort();
+  }
+
+  /// 🧹 Filtro por município
+  void filterByMunicipio(String? municipio) {
+    setState(() {
+      selectedMunicipio = municipio;
+
+      if (municipio == null || municipio.isEmpty) {
+        zones = List.from(allZones);
+        return;
+      }
+
+      zones = allZones.where((z) {
+        final m = z["municipality"];
+
+        if (m is String) return m == municipio;
+
+        if (m is Map && m["name"] != null) {
+          return m["name"] == municipio;
+        }
+
+        return false;
+      }).toList();
+    });
+  }
+
+  /// 📍 Popup de filtro
+  void openMunicipioFilterPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.select_municipality,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              )
+          ),
+          content: SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  title: Text(AppLocalizations.of(context)!.show_all),
+                  leading: Radio<String?>(
+                    value: null,
+                    groupValue: selectedMunicipio,
+                    onChanged: (value) {
+                      Navigator.pop(context);
+                      filterByMunicipio(value);
+                    },
+                  ),
+                ),
+                const Divider(),
+
+                ...municipios.map((municipio) {
+                  return ListTile(
+                    title: Text(municipio),
+                    leading: Radio<String>(
+                      value: municipio,
+                      groupValue: selectedMunicipio,
+                      onChanged: (value) {
+                        Navigator.pop(context);
+                        filterByMunicipio(value);
+                      },
+                    ),
+                  );
+                }).toList(),
+
+                const SizedBox(height: 10),
+
+                /// 🔘 BOTÃO FECHAR
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      /*AppLocalizations.of(context)!.close*/"Fechar",
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: CustomDrawerWidget(),
       appBar: CustomAppBarWidget(
-        title: isOffline ? "${AppLocalizations.of(context)!.zones}(Offline)" : AppLocalizations.of(context)!.zones,
+        title: isOffline
+            ? "${AppLocalizations.of(context)!.zones} (Offline)"
+            : AppLocalizations.of(context)!.zones,
       ),
+
+      floatingActionButton: GestureDetector(
+        onTap: openMunicipioFilterPopup,
+        child: Container(
+          width: 62,
+          height: 62,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF4A90E2), // Azul moderno
+                Color(0xFF9013FE), // Roxo vibrante
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.filter_list,
+            color: Colors.white,
+            size: 30,
+          ),
+        ),
+      ),
+
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -159,15 +314,20 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
                 ? RefreshIndicator(
                     onRefresh: loadZones,
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       itemCount: zones.length,
                       itemBuilder: (context, index) {
-                        final zone = zones[index];
-                        return ZoneCardWidget(zone, index);
+                        return ZoneCardWidget(zones[index], index);
                       },
                     ),
                   )
-                : Center(child: Text(AppLocalizations.of(context)!.no_zones_available)),
+                : Center(
+                    child: Text(AppLocalizations.of(context)!
+                        .no_zones_available),
+                  ),
       ),
     );
   }

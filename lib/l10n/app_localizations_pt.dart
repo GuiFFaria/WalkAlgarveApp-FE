@@ -55,4 +55,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get no_trails_available => 'Nenhum trilho disponível.';
+
+  @override
+  String get select_municipality => 'Selecionar município';
+
+  @override
+  String get welcome => 'Bem-vindo ao Algarve';
+
+  @override
+  String get show_all => 'Mostrar todas';
 }

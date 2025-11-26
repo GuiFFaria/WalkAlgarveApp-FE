@@ -15,11 +15,13 @@ class ZoneDetailsScreen extends StatelessWidget {
 
     final imageUrl = zone["thumbnail_url"] ?? "";
     final title = locale == "pt"
-      ? (zone['translations']?['pt']?['name']?.toString() ?? '')
-      : (zone['translations']?['en']?['name']?.toString() ?? '');
+        ? (zone['translations']?['pt']?['name']?.toString() ?? '')
+        : (zone['translations']?['en']?['name']?.toString() ?? '');
     final description = locale == "pt"
-      ? (zone['translations']?['pt']?['description']?.toString() ?? 'Sem descrição disponível.')
-      : (zone['translations']?['en']?['description']?.toString() ?? 'No description available');
+        ? (zone['translations']?['pt']?['description']?.toString() ??
+            'Sem descrição disponível.')
+        : (zone['translations']?['en']?['description']?.toString() ??
+            'No description available');
     final bool userHasZone = zone["user_have"] == true;
 
     return Scaffold(
@@ -29,7 +31,7 @@ class ZoneDetailsScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 🖼️ Imagem topo
+          // 🖼️ Imagem topo com loading
           SizedBox(
             width: double.infinity,
             height: 180,
@@ -37,8 +39,24 @@ class ZoneDetailsScreen extends StatelessWidget {
                 ? Image.network(
                     imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Image.asset("assets/default.jpg", fit: BoxFit.cover),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Color(0xFF1BA6A1)),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      "assets/default.jpg",
+                      fit: BoxFit.cover,
+                    ),
                   )
                 : Image.asset("assets/default.jpg", fit: BoxFit.cover),
           ),
@@ -46,12 +64,12 @@ class ZoneDetailsScreen extends StatelessWidget {
           // 📄 Conteúdo scrollável
           Expanded(
             child: SingleChildScrollView(
-              // Mantém padding do conteúdo
               child: Container(
-                width: double.infinity, // ✅ garante que o content ocupe toda a largura
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // força alinhamento à esquerda
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       AppLocalizations.of(context)!.aboutZone,
@@ -94,9 +112,12 @@ class ZoneDetailsScreen extends StatelessWidget {
               onPressed: () {
                 if (userHasZone) {
                   // Navega para trilhos da zona
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => TrailsListScreen(zoneId: zone["id"]),
-                  ));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TrailsListScreen(zoneId: zone["id"]),
+                    ),
+                  );
                 } else {
                   // Lógica de compra (p.ex. abrir checkout)
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -108,9 +129,14 @@ class ZoneDetailsScreen extends StatelessWidget {
                 }
               },
               child: Text(
-                userHasZone ? AppLocalizations.of(context)!.viewTrails : AppLocalizations.of(context)!.unlockZone,
+                userHasZone
+                    ? AppLocalizations.of(context)!.viewTrails
+                    : AppLocalizations.of(context)!.unlockZone,
                 style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
