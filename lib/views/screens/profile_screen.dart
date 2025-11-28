@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar_widget.dart';
 import 'package:walk_algarve_app/views/components/custom_drawer_widget.dart';
+import 'package:walk_algarve_app/views/screens/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -60,7 +61,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await prefs.remove("user");
 
     if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 

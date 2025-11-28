@@ -197,62 +197,64 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
     });
   }
 
-  /// 📍 Popup de filtro
+  /// 📍 Popup de filtro (NOVO E MAIS BONITO)
   void openMunicipioFilterPopup() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.select_municipality,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 10,
-              )
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          title: Text(
+            AppLocalizations.of(context)!.select_municipality,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18, // 🔥 Título maior
+            ),
+          ),
+          
           content: SizedBox(
-            width: 300,
+            width: 600, // 🔥 Popup mais largo
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
-                  title: Text(AppLocalizations.of(context)!.show_all),
-                  leading: Radio<String?>(
-                    value: null,
-                    groupValue: selectedMunicipio,
-                    onChanged: (value) {
-                      Navigator.pop(context);
-                      filterByMunicipio(value);
-                    },
-                  ),
+                const SizedBox(height: 10),
+                buildMunicipioOption(
+                  title: AppLocalizations.of(context)!.show_all,
+                  value: null,
                 ),
+
+                const SizedBox(height: 10),
+
                 const Divider(),
 
                 ...municipios.map((municipio) {
-                  return ListTile(
-                    title: Text(municipio),
-                    leading: Radio<String>(
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: buildMunicipioOption(
+                      title: municipio,
                       value: municipio,
-                      groupValue: selectedMunicipio,
-                      onChanged: (value) {
-                        Navigator.pop(context);
-                        filterByMunicipio(value);
-                      },
                     ),
                   );
                 }).toList(),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
 
                 /// 🔘 BOTÃO FECHAR
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      /*AppLocalizations.of(context)!.close*/"Fechar",
-                      style: const TextStyle(
+                    child: const Text(
+                      "Fechar",
+                      style: TextStyle(
                         color: Colors.redAccent,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
@@ -265,6 +267,50 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
     );
   }
 
+  /// Widget elegante para cada opção
+  Widget buildMunicipioOption({
+    required String title,
+    required String? value,
+  }) {
+    final bool selected = selectedMunicipio == value;
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        filterByMunicipio(value);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(
+          color: selected ? Colors.blue.shade50 : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? Colors.blue : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: selected ? Colors.blue : Colors.grey,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -285,8 +331,8 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
             shape: BoxShape.circle,
             gradient: const LinearGradient(
               colors: [
-                Color(0xFF4A90E2), // Azul moderno
-                Color(0xFF9013FE), // Roxo vibrante
+                Color(0xFF4A90E2),
+                Color(0xFF9013FE),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -325,8 +371,8 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
                     ),
                   )
                 : Center(
-                    child: Text(AppLocalizations.of(context)!
-                        .no_zones_available),
+                    child:
+                        Text(AppLocalizations.of(context)!.no_zones_available),
                   ),
       ),
     );

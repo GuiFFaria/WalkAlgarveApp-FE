@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
+import 'package:walk_algarve_app/views/screens/trail_details_screen.dart';
 
 class TrailCardWidget extends StatefulWidget {
   final Map<String, dynamic> trail;
@@ -175,6 +176,12 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     return GestureDetector(
       onTap: () {
         // TODO: Navegar para detalhes do trilho
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TrailDetailsScreen(trail: trail),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
