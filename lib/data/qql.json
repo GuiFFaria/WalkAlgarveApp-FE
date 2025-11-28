@@ -1,59 +1,66 @@
-OrderedDict([
-    ('type', 'FeatureCollection'), 
-    ('features', [ 
-        OrderedDict([
-            ('id', 6), 
-            ('type', 'Feature'), 
-            ('geometry', GeoJsonDict([
-            ])), 
-            ('properties',
+[OrderedDict([
+    ('id', 6), 
+    ('type', 'Feature'), 
+    ('geometry', GeoJsonDict([
+        ('type', 'LineString'), 
+        ('coordinates', [
+            [-8.4129854, 37.0901519], [-8.4130297, 37.0901348], [-8.4130994, 37.0900888], [-8.4131547, 37.09008629999999], [-8.4132432, 37.090097], [-8.4133569, 37.0901145], [-8.413439, 37.0901612], [-8.4135447, 37.0901915], [-8.4135742, 37.09017329999999], [-8.4136294, 37.090088499999986], 
+            [-8.4136935, 37.09001289999997], [-8.4137475, 37.0899558], [-8.4137941, 37.08992189999998], [-8.4138705, 37.0899337], [-8.4138521, 37.0900243], [-8.4138692, 37.0901102], [-8.4139309, 37.090179699999986], [-8.4139808, 37.090227], [-8.4139593, 37.09026329999999], [-8.4139406, 37.090330199999975], [-8.4139835, 37.090379399999975], 
+            [-8.414072, 37.0904265], [-8.4144502, 37.09051], [-8.4145682, 37.0905094], [-8.4146782, 37.090471399999984], [-8.4147533, 37.0903901], [-8.4149115, 37.0902489], [-8.4150832, 37.0901676], [-8.4152763, 37.09006489999997], [-8.41533, 37.08998359999999], [-8.415448, 37.08982959999999], [-8.4156304, 37.0896926], [-8.415735, 37.0895487], [-8.4157296, 37.08945889999997], [-8.4156706, 37.089384], [-8.415735, 37.089262], [-8.415963, 37.0891192], [-8.4161078, 37.08904219999998], [-8.4162553, 37.088971], [-8.4164082, 37.0889224], [-8.4165986, 37.0888833], [-8.4166898, 37.088832], [-8.416722, 37.0887335], [-8.4167327, 37.088648], [-8.4167274, 37.08855809999998], [-8.4166845, 37.088434], [-8.4166576, 37.08832269999997], [-8.4166818, 37.08817779999997], [-8.4166872, 37.08808369999997], [-8.4166603, 37.0879981], [-8.416655, 37.08790389999997], [-8.4166603, 37.0878269], [-8.4167194, 37.08779269999998], [-8.4166657, 37.087737], [-8.4166496, 37.0876985], [-8.4167194, 37.0876771], [-8.4167945, 
+            37.0876515], [-8.4168642, 37.0875916], [-8.4169661, 37.0875787], [-8.4170359, 37.087493099999975], [-8.417127, 37.0875958], [-8.417288, 37.087493099999975], [-8.4174167, 37.0875145], [-8.4176206, 37.08754449999997], [-8.4177976, 37.08762579999998], [-8.4178512, 37.087711399999975], [-8.4178942, 37.0878098], [-8.4180551, 37.0878355], [-8.4182536, 37.08777129999998], [-8.4185003, 37.087737], [-8.4187096, 37.0875231], [-8.4189349, 37.0873262], [-8.4191065, 37.0871379], [-8.4192138, 37.0868213], [-8.419246, 37.08669289999997], [-8.419364, 37.0865902], [-8.4196322, 37.0865902], [-8.419879, 37.0867186], [-8.4201043, 37.08688119999998], [-8.4203296, 37.08688969999998], [-8.4205978, 37.086787], [-8.4208553, 37.0868213], [-8.4209733, 37.087001], [-8.4209841, 37.08730059999997], [-8.4209841, 37.0874118], [-8.4213918, 37.08770279999996], [-8.4215956, 37.08781409999998], [-8.422014, 37.08780549999997], [-8.4222286, 37.087711399999975], [-8.4223252, 37.087617199999976], [-8.4225719, 37.087574399999966], [-8.4228938, 37.0875231], [-8.423162, 37.087506], 
+            [-8.4234302, 37.08760009999999], [-8.4235644, 37.0875488], [-8.4237467, 37.08745889999998], [-8.4238433, 37.0873605], [-8.4239828, 37.087322], [-8.4242403, 37.08726629999999], [-8.4244012, 37.0871979], [-8.4245031, 37.0871936], [-8.4248304, 37.087313399999985], [-8.4250235, 37.087476], [-8.4251898, 37.0875787], [-8.4253507, 37.08769], [-8.4254419, 37.08781409999998], [-8.4255921, 37.0878825], 
+            [-8.4257048, 37.08796809999998], [-8.4257852, 37.0880965], [-8.4257959, 37.0882163], [-8.4257852, 37.0883704], [-8.4258389, 37.088426], [-8.4259354, 37.088477399999974], [-8.4259944, 37.0885373], [-8.4259998, 37.0885801], [-8.4261178, 37.0886485], [-8.4261661, 37.0886999], [-8.4261607, 37.08878119999997], [-8.4261768, 37.088871], [-8.4263056, 37.0888496], [-8.426445, 37.0887983], [-8.4265309, 
+            37.0887384], [-8.4265684, 37.0886699], [-8.4265631, 37.08851159999998], [-8.4264719, 37.0880965], [-8.4264504, 37.08790819999998], [-8.4264678, 37.087843], [-8.4264947, 37.087816199999985], [-8.4265496, 37.0877895], [-8.4265859, 37.0877809], [-8.4266127, 37.08777019999999], [-8.4266194, 37.087751], [-8.4266006, 37.0876664], [-8.4265711, 37.08756049999998], [-8.4265671, 37.08751349999998], [-8.4265939, 37.0874108], [-8.4265805, 37.0873605], [-8.4265617, 37.0873209], [-8.4265644, 37.08728129999999], [-8.4265805, 37.08726739999998], [-8.4266194, 37.0872909], [-8.4266301, 37.087322], [-8.4266502, 37.0873583], [-8.4266623, 37.0873829], [-8.4266864, 37.087380799999984], [-8.4266757, 37.0873327], [-8.4266891, 37.0873327], [-8.4267334, 37.08746749999998], [-8.4267374, 37.0875562], [-8.4267374, 37.0876065], [-8.426775, 37.0876162], [-8.4268299, 37.0871786], [-8.4268353, 37.087145399999976], [-8.4268581, 37.08712830000001], [-8.426905, 37.0871636], [-8.4270324, 37.087369], [-8.4271035, 37.087380799999984], [-8.4271719, 37.0874439], [-8.4272417, 37.08749949999997], [-8.4272631, 37.08754449999997], [-8.4272806, 37.0875702], [-8.4273181, 37.087598], [-8.4273409, 37.0876129], [-8.4273543, 37.08760439999999], [-8.4273248, 37.08748459999998], [-8.4273221, 37.0874375], [-8.4274026, 37.087399], [-8.4276064, 37.0873712], [-8.4276708, 37.0873327], [-8.4276654, 37.0872727], [-8.4276386, 37.087191399999966], [-8.4276708, 37.0871615], [-8.4279873, 37.087090899999986], [-8.4282073, 37.0870417], [-8.4285398, 37.0869368], [-8.4286123, 37.086964599999966], [-8.4286927, 37.08698819999998], [-8.4287652, 37.0869796], [-8.4293499, 37.086879], [-8.4296878, 37.0868363], [-8.4299668, 37.0869004], [-8.4301384, 37.086964599999966], [-8.4302672, 37.0871572], [-8.4303691, 37.0872856], [-8.43053, 37.0873369], [-8.4307017, 37.0872685], [-8.4308305, 37.08718289999998], [-8.4309807, 37.0869732], [-8.4310826, 37.08695179999999], [-8.4313025, 37.0869818], [-8.4313884, 37.0869732], [-8.4315064, 37.08691759999997], [-8.4323003, 37.0871401], [-8.4323486, 37.0870673], [-8.4322574, 37.086930399999964], [-8.4322413, 37.0867336], [-8.4321608, 37.0865324], [-8.4322091, 37.0862243], [-8.432252, 37.086087399999975], [-8.432413, 37.086018899999985], [-8.4326812, 37.08594619999998], [-8.432885, 37.0859419], [-8.4331157, 37.08583919999998], [-8.433282, 37.0858606], [-8.433459, 37.08616869999998], [-8.4336414, 37.0863399], [-8.4338828, 37.08638689999998], 
+            [-8.4341242, 37.086404], [-8.4343495, 37.086327], [-8.4345104, 37.08624139999997], [-8.4346928, 37.0861644], [-8.4347948, 37.086087399999975], [-8.4348591, 37.0860446], [-8.4349074, 37.08599319999998], [-8.4349879, 37.08595039999999], [-8.4352293, 37.0859847], [-8.4354921, 37.08599319999998], [-8.4357174, 37.0861088], [-8.4358623, 37.08628849999998], [-8.4359588, 37.086464], [-8.4360608, 37.086583799999964], [-8.4362217, 37.086707899999986], [-8.4363773, 37.08675489999998], [-8.4365757, 37.0867849], [-8.4367796, 37.0868363], [-8.4369673, 37.0867122], [-8.4371766, 37.0866223], [-8.4374072, 37.0865324], [-8.4375521, 37.08645969999998], [-8.4377023, 37.0864426], [-8.4378471, 37.0864682], [-8.4379705, 37.0865923], [-8.4380939, 37.0867678], [-8.4381851, 37.0868534], [-8.4382548, 37.08690469999997], [-8.4383996, 37.0868748], [-8.4385767, 37.08677629999996], [-8.4387591, 37.0867336], [-8.4390005, 37.0867935], [-8.4392258, 37.0868705], [-8.4398266, 37.0870673], [-8.440481, 37.08781189999998], [-8.4406312, 37.08800879999997], [-8.4407493, 37.0881029], [-8.4409638, 37.08808579999997], [-8.4411999, 37.087966], [-8.4411945, 37.0878333], [-8.4412321, 37.08767929999996], [-8.441275, 
+            37.087508099999965], [-8.4413447, 37.0873883], [-8.4414305, 37.087345499999984], [-8.4415486, 37.0873369], [-8.4415754, 37.087277], 
+            [-8.4415807, 37.0872086], [-8.4416773, 37.0871615], [-8.4418221, 37.087127199999976], [-8.441967, 37.0871358], [-8.4420904, 37.0871786], [-8.442262, 37.0872556], [-8.442423, 37.0873883], [-8.4426268, 37.087508099999965], [-8.4427716, 37.08758509999998], [-8.4429058, 37.08757659999996], [-8.4431901, 37.08751239999999], [-8.4437963, 37.0873712], [-8.4439679, 37.087277], [-8.4441128, 37.0873712], [-8.4442254, 37.087426799999974], [-8.4443434, 37.0875038], [-8.4445097, 37.0875167], [-8.4446546, 37.08753379999997], [-8.4449281, 37.08761079999997], [-8.4449764, 37.0875167], [-8.4451803, 37.08749949999997], [-8.4454914, 37.0874439], [-8.4456953, 37.0874225], 
+            [-8.4459098, 37.08747389999998], [-8.4459957, 37.08743959999998], 
+            [-8.4461405, 37.0873712], [-8.4463444, 37.087289899999966], [-8.4464516, 37.0872342], [-8.4466072, 37.08721709999997], [-8.4468754, 
+            37.087264199999986], [-8.448061, 37.08754229999999], [-8.4484204, 
+            37.08761509999998], [-8.4488066, 37.0876622], [-8.4489729, 37.087752], [-8.4490158, 37.087859], [-8.4490051, 37.08790609999997], [-8.4490051, 37.0880045], [-8.449048, 37.08807719999998], [-8.4490963, 37.0881286], [-8.4490963, 37.0882185], [-8.4490534, 37.0882955], [-8.4490105, 37.08835539999997], [-8.448989, 37.0884324], [-8.449048, 37.08860359999998], [-8.4490587, 37.088706299999984], [-8.4490802, 37.08876619999999], [-8.4491821, 37.08876619999999], [-8.4493001, 37.0888304], [-8.4493055, 37.088907399999975], [-8.4493001, 
+            37.089023], [-8.4493699, 37.0890871], [-8.4494611, 37.089074299999965], [-8.449504, 37.08898869999997], [-8.4495308, 37.0888775], [-8.4497025, 37.0887833], [-8.4498098, 37.08866779999998], [-8.4498902, 37.08856079999999], [-8.450019, 37.088449499999975], [-8.4501263, 37.0883597], [-8.4502711, 37.08831259999999], [-8.4504267, 37.0883254], [-8.4505232, 37.088342599999976], [-8.4508558, 37.0883597], [-8.4508558, 37.088470899999976], [-8.450829, 37.08857789999998], [-8.4510114, 37.088620699999986], [-8.4510704, 37.08871059999998], [-8.4511831, 37.08877479999998], [-8.4512743, 37.0888775], [-8.4512796, 37.0889545], [-8.4513225, 37.0890529], [-8.4513386, 37.0891471], [-8.451344, 37.08924549999997], [-8.4513172, 37.0893653], [-8.4512313, 37.0894466], [-8.4511455, 37.08949369999998], [-8.4511455, 37.089583499999975], [-8.4512045, 37.0897333], [-8.4511723, 37.089814599999976], [-8.4512152, 37.08997289999998], [-8.4512635, 37.0900628], [-8.4513762, 37.090088499999986], [-8.4514835, 37.09005419999997], [-8.4515586, 37.08998579999998], [-8.4517088, 37.08993869999997], [-8.4520414, 37.08998579999998], [-8.4524061, 37.09005], [-8.4526422, 37.09005849999998], [-8.4528728, 37.090107699999976], [-8.453007, 37.090097], [-8.4531169, 37.0901163], [-8.4532323, 37.0901163], [-8.4533664, 37.0900949], [-8.4534924, 37.090107699999976], [-8.4535997, 37.09017619999999], [-8.4539082, 37.090430799999986], [-8.4540289, 37.0905592], [-8.4541254, 37.0906298], 
+            [-8.4541979, 37.0906982], [-8.4542086, 37.0907924], [-8.4542032, 37.090892899999965], [-8.4541549, 37.09098919999999], [-8.4541147, 
+            37.0910705], [-8.4541523, 37.09108759999997], [-8.4541093, 37.0911326], [-8.4541442, 37.09114749999996], [-8.4541147, 37.09119889999999], [-8.4541818, 37.091201], [-8.4541898, 37.0912246], [-8.4542998, 37.09119889999999], [-8.4543347, 37.09122239999998], [-8.45434, 37.09125669999999]
+        ])
+    ])),
+    ('properties', OrderedDict([
+        ('name', 'Seven Hanging Valleys Trail'), 
+        ('difficulty', 'Moderate'), 
+        ('pois', OrderedDict([
+            ('type', 'FeatureCollection'), 
+            ('features', [
                 OrderedDict([
-                    ('name', 'Seven Hanging Valleys Trail'), 
-                    ('difficulty', 'Moderate'), 
-                    ('distance_km', 12.0), 
-                    ('duration_min',6), 
-                    ('trail_type', 'LINEAR'),
-                    ('is_bike_friendly', False),
-                    ('description', 'Elected as one of the very best hikes in Europe by European best Destinations, the Seven Hanging Valleys Trail is not to be missed as this winding and fragrant trail that takes us through some of the most beautiful natural gems of the Algarve. Here, the turquoise ocean has conspired with the warm-coloured cliffs to create the quintessential Algarvian seascap and one of the most rewarding and memorable walks along the sun-kissed coastline. Know more at https: //www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'),
-                    ('thumbnail_url', 'https://www.walkalgarve.com/wp-content/uploads/2025/05/Seven-Hanging-Valleys-Trail-Sunset.webp'), 
-                    ('zone', {
-                        'id': 1, 
-                        'name': 'Faro', 
-                        'description': 'Qualquer coisa', 
-                        'thumbnail_url': 'https://www.walkalgarve.com/wp-content/uploads/2025/05/Seven-Hanging-Valleys-Trail-Sunset.webp',
-                        'municipality': {
-                            'id': 1, 
-                            'name': 'Faro', 
-                            'translations': []
-                        }, 
-                        'translations': {
-                            'pt': {
-                                'name': 'Faro', 
-                                'description': 'Descrição da zona de faro em português'
-                            }, 
-                            'en': {
-                                'name': 'Faro', 
-                                'description': "Faro's zone description in english"
-                            }
-                        }
-                    }),
-                    ('pois', OrderedDict([
-                    ])
-                    ), 
-                    ('translations', [
-                        {
-                            'language': 'en',
-                            'name': 'Seven Hanging Valleys Trail', 
-                            'description': 'Elected as one of the very best hikes in Europe by European best Destinations, the Seven Hanging Valleys Trail is not to be missed as this winding and fragrant trail that takes us through some of the most beautiful natural gems of the Algarve. Here, the turquoise ocean has conspired with the warm-coloured cliffs to create the quintessential Algarvian seascap and one of the most rewarding and memorable walks along the sun-kissed coastline. Know more at https://www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'
-                        },
-                        {
-                            'language': 'pt', 
-                            'name': 'Trilha dos Sete Vales Suspensos', 
-                            'description': 'Eleita uma das melhores trilhas da Europa pela European Best Destinations, a Trilha dos Sete Vales Suspensos é imperdível. Este percurso sinuoso e perfumado nos leva por algumas das mais belas joias naturais do Algarve. Aqui, o oceano turquesa se une às falésias de tons quentes para criar a paisagem marítima algarvia por excelência, proporcionando uma das caminhadas mais gratificantes e memoráveis \u200b\u200bao longo da costa ensolarada. Saiba mais em https://www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'
-                        }
-                    ])
-                ])
-            )
-        ])]
-    )
-])
+                    ('id', 5), 
+                    ('type', 'Feature'), 
+                    ('geometry', GeoJsonDict([
+                        ('type', 'Point'), 
+                        ('coordinates', [-8.4129776, 37.0901672])
+                    ])), 
+                    ('properties', OrderedDict([
+                        ('name', 'Trail Start / Finish | Praia da Marinha'), 
+                        ('type', ''), 
+                        ('description', 'Widely regarded as one of the most beautiful beaches in Europe. Picture-perfect, particularly at sunset.\xa0'), 
+                        ('is_bonus', False), 
+                        ('translations', [])
+                    ]))
+                ]), 
+                OrderedDict([
+                    ('id', 6), 
+                    ('type', 'Feature'), 
+                    ('geometry', GeoJsonDict([
+                        ('type', 'Point'),
+                        ('coordinates', [-8.4543109, 37.0912766])
+                    ])), 
+                    ('properties', OrderedDict([
+                        ('name', 'Trail Start / Finish | Praia de Vale Centeanes'),
+                        ('type', ''), 
+                        ('description', ''), 
+                        ('is_bonus', False), 
+                        ('translations', [])
+                    ]))
+                ]), 
+                OrderedDict([('id', 7), ('type', 'Feature'), ('geometry', GeoJsonDict([('type', 'Point'), ('coordinates', [-8.4261018, 37.0873983])])), ('properties', OrderedDict([('name', 'Benagil Beach'), ('type', ''), ('description', 'A small fishing village located at the mouth of a narrow valley. Nowadays, it 
+is one of the main starting points to explore by boat the stunning sea caves scattered throughout the sun-kissed shoreline. It has a few cafés and restaurants.\xa0'), ('is_bonus', False), ('translations', [])]))]), OrderedDict([('id', 8), ('type', 'Feature'), ('geometry', GeoJsonDict([('type', 'Point'), ('coordinates', [-8.4235797, 37.0872829])])), ('properties', OrderedDict([('name', 'Benagil Sea Cave'), ('type', ''), ('description', 'Benagil Cave must be one of the most sublime sea caves anywhere in the world. You’ll find a beach within, as well as a ceiling adorned by a round hole that lets the sun shine through. A must. However, you won’t be able to access the cave directly from the trail.\xa0'), ('is_bonus', False), ('translations', [])]))]), 
+OrderedDict([('id', 9), ('type', 'Feature'), ('geometry', GeoJsonDict([('type', 'Point'), ('coordinates', [-8.4315214, 37.0869387])])), ('properties', OrderedDict([('name', 'Carvalho Beach'), ('type', ''), ('description', 'After a long walk down a tunnel, you’ll be greeted by this sheltered cove with grottoes and an imposing rock outcrop located smack in the middle of the little bay. Very scenic, but the water can be chilly even in summer.\xa0'), ('is_bonus', False), ('translations', [])]))]), OrderedDict([('id', 10), ('type', 'Feature'), ('geometry', GeoJsonDict([('type', 'Point'), ('coordinates', [-8.4411358, 37.0880855])])), ('properties', OrderedDict([('name', 'Alfanzina Lighthouse Picnic Area'), ('type', ''), ('description', 'In the lighthouse’s vicinity, you’ll find a thick grove of hardy Aleppo pine trees. Rest under their shadows before resuming your walk towards Centeanes Beach.\xa0'), ('is_bonus', False), ('translations', [])]))]), OrderedDict([('id', 11), ('type', 'Feature'), ('geometry', GeoJsonDict([('type', 'Point'), ('coordinates', [-8.4372627, 37.0865964])])), ('properties', OrderedDict([('name', 'Leixão do Ladrão'), ('type', ''), ('description', 'A stretch that looks like some sort of lunar landscape. Bare limestone rock, and no shade.\xa0'), ('is_bonus', False), ('translations', [])]))])])])), ('translations', [{'language': 'en', 'name': 'Seven Hanging Valleys Trail', 'description': 'Elected as one of the very best hikes in Europe by European best Destinations, the Seven Hanging Valleys Trail is not to be missed as this winding and fragrant trail that takes us through some 
+of the most beautiful natural gems of the Algarve. Here, the turquoise ocean has conspired with the warm-coloured cliffs to create the quintessential Algarvian seascap and one of the most rewarding 
+and memorable walks along the sun-kissed coastline. Know more at https://www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'}, {'language': 'pt', 'name': 'Trilha dos Sete Vales Suspensos', 'description': 'Eleita uma das melhores trilhas da Europa pela European Best Destinations, a Trilha dos Sete Vales Suspensos é imperdível. Este percurso sinuoso e perfumado nos leva por algumas das mais belas joias naturais do Algarve. Aqui, o oceano turquesa se une às falésias de tons quentes para criar a paisagem marítima algarvia por excelência, proporcionando uma das caminhadas mais gratificantes e memoráveis \u200b\u200bao longo da costa ensolarada. Saiba mais em https://www.walkalgarve.com/algarve-walking-sightseeing-birding-routes/seven-hanging-valleys-trail-lagoa-western-algarve'}]), ('is_favorite', False)]))])]
