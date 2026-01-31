@@ -30,83 +30,78 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Material(
-        elevation: 20,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: Container(
-          height: 360,
-          padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              /// Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.poi['properties']?['name'] ?? "Ponto de Interesse",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+    return Material(
+      elevation: 20,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: Container(
+        height: 360,
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            /// Header
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.poi['properties']?['name'] ?? "Ponto de Interesse",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: widget.onClose,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: widget.onClose,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            /// Paginator
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _pageIndex = i),
+                children: [
+                  _infoPage("Fauna", widget.poi['properties']?['fauna']),
+                  _infoPage("Flora", widget.poi['properties']?['flora']),
+                  _infoPage(
+                    "Geologia",
+                    widget.poi['properties']?['geology'],
                   ),
+                  _messagesPage(),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-              /// Paginator
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (i) => setState(() => _pageIndex = i),
-                  children: [
-                    _infoPage("Fauna", widget.poi['properties']?['fauna']),
-                    _infoPage("Flora", widget.poi['properties']?['flora']),
-                    _infoPage(
-                        "Geologia", widget.poi['properties']?['geology']),
-                    _messagesPage(),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              /// Dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  4,
-                  (i) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: _pageIndex == i ? 10 : 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: _pageIndex == i
-                          ? Colors.blue
-                          : Colors.grey.shade400,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+            /// Dots
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                4,
+                (i) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _pageIndex == i ? 10 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color:
+                        _pageIndex == i ? Colors.blue : Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -117,9 +112,10 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Text(
             content?.toString() ?? "Sem informação disponível.",
@@ -139,18 +135,18 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-
         Expanded(
           child: ListView(
             children: _messages
-                .map((m) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Text("• $m"),
-                    ))
+                .map(
+                  (m) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text("• $m"),
+                  ),
+                )
                 .toList(),
           ),
         ),
-
         Row(
           children: [
             Expanded(

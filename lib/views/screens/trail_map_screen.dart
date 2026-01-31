@@ -61,16 +61,13 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   }
 
   // ===========================================================
-  // ORDENAR POIs POR ORDEM GEOGRÁFICA
+  // ORDENAR POIs
   // ===========================================================
   void _sortPois() {
     final pois = widget.trail['properties']?['pois']?['features'];
     final path = widget.trail['geometry']?['coordinates'];
 
-    if (pois == null || path == null || pois.isEmpty || path.isEmpty) {
-      DebugLogger.warn("TrailMap", "POIs ou path vazios — ordenação ignorada");
-      return;
-    }
+    if (pois == null || path == null || pois.isEmpty || path.isEmpty) return;
 
     final start = LatLng(path.first[1], path.first[0]);
 
@@ -85,8 +82,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     }
 
     pois.sort((a, b) => distToStart(a).compareTo(distToStart(b)));
-
-    DebugLogger.info("TrailMap", "POIs ordenados (${pois.length})");
   }
 
   // ===========================================================
@@ -143,7 +138,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   // INICIAR TRILHO
   // ===========================================================
   Future<void> _startTrail() async {
-    DebugLogger.info("TrailMap", "Trilho iniciado");
     _trailStarted = true;
     await _enableLocationTracking();
 
@@ -153,14 +147,11 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   }
 
   // ===========================================================
-  // LOCALIZAÇÃO + DETEÇÃO DE POIs
+  // LOCALIZAÇÃO + POIs
   // ===========================================================
   Future<void> _enableLocationTracking() async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        DebugLogger.warn("TrailMap", "Serviço de localização desligado");
-        return;
-      }
+      if (!await Geolocator.isLocationServiceEnabled()) return;
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -168,10 +159,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       }
 
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        DebugLogger.warn("TrailMap", "Permissões negadas");
-        return;
-      }
+          permission == LocationPermission.deniedForever) return;
 
       final pois =
           widget.trail['properties']?['pois']?['features'] as List<dynamic>?;
@@ -180,24 +168,13 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
 
       _positionStream =
           Geolocator.getPositionStream().listen((Position pos) {
-        final newLocation = LatLng(pos.latitude, pos.longitude);
+        final user = LatLng(pos.latitude, pos.longitude);
 
-        //setState(() => _userLocation = newLocation);
+        setState(() => _userLocation = user);
 
-        DebugLogger.info("Trail Map", "User Location: $_userLocation");
-        DebugLogger.info("Trail Map", "Trail Start: ${_extractPath().first}");
-        setState(() {
-          _userLocation = _extractPath().first;
-        });
-
-        /// DETEÇÃO DE ENTRADA EM POI
         for (final poi in pois) {
-          if (_isUserNearPoi(_userLocation!, poi)) {
+          if (_isUserNearPoi(user, poi)) {
             if (_activePoi != poi) {
-              DebugLogger.info(
-                "TrailMap",
-                "Entrou no POI ${poi['properties']?['name']}",
-              );
               setState(() {
                 _activePoi = poi;
                 _poiPopupVisible = true;
@@ -207,12 +184,10 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
           }
         }
 
-        /// SAIU DE TODOS OS POIs
-        if (_poiPopupVisible && _activePoi != null) {
-          DebugLogger.info("TrailMap", "Saiu do POI: $_poiPopupVisible - ${_activePoi != null}");
+        if (_poiPopupVisible) {
           setState(() {
-            _activePoi = null;
             _poiPopupVisible = false;
+            _activePoi = null;
           });
         }
       });
@@ -233,15 +208,11 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   }
 
   // ===========================================================
-  // EXTRAÇÃO DE DADOS
+  // EXTRAÇÃO
   // ===========================================================
   List<LatLng> _extractPath() {
-    try {
-      final coords = widget.trail['geometry']['coordinates'];
-      return coords.map<LatLng>((c) => LatLng(c[1], c[0])).toList();
-    } catch (_) {
-      return [];
-    }
+    final coords = widget.trail['geometry']['coordinates'];
+    return coords.map<LatLng>((c) => LatLng(c[1], c[0])).toList();
   }
 
   List<dynamic> _extractPois() =>
@@ -264,21 +235,27 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter:
-                  path.isNotEmpty ? path.first : const LatLng(0, 0),
-              initialZoom: 17,
-              interactionOptions:
-                  const InteractionOptions(flags: InteractiveFlag.all),
+          /// =========================
+          /// MAPA (COM OFFSET SAFEAREA)
+          /// =========================
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top,
             ),
-            children: [
-              TileLayer(
-                urlTemplate:
-                    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter:
+                    path.isNotEmpty ? path.first : const LatLng(0, 0),
+                initialZoom: 17,
+                interactionOptions:
+                    const InteractionOptions(flags: InteractiveFlag.all),
               ),
-              if (path.isNotEmpty)
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                ),
                 PolylineLayer(
                   polylines: [
                     Polyline(
@@ -288,73 +265,86 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                     ),
                   ],
                 ),
-              MarkerLayer(
-                markers: [
-                  ...List.generate(visiblePois, (i) {
-                    final poi = pois[i];
-                    final c = poi['geometry']['coordinates'];
-                    final point = LatLng(c[1], c[0]);
+                MarkerLayer(
+                  markers: [
+                    ...List.generate(visiblePois, (i) {
+                      final poi = pois[i];
+                      final c = poi['geometry']['coordinates'];
+                      final point = LatLng(c[1], c[0]);
 
-                    final clickable = _userLocation != null &&
-                        _isUserNearPoi(_userLocation!, poi);
+                      final clickable = _userLocation != null &&
+                          _isUserNearPoi(_userLocation!, poi);
 
-                    return Marker(
-                      point: point,
-                      width: 26,
-                      height: 26,
-                      child: GestureDetector(
-                        onTap: clickable
-                            ? () {
-                                setState(() {
-                                  _activePoi = poi;
-                                  _poiPopupVisible = true;
-                                });
-                              }
-                            : null,
-                        child: _poiMarker(_letter(i), clickable),
-                      ),
-                    );
-                  }),
-                  if (_userLocation != null)
-                    Marker(
-                      point: _userLocation!,
-                      width: 18,
-                      height: 18,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border:
-                              Border.all(color: Colors.white, width: 1.5),
+                      return Marker(
+                        point: point,
+                        width: 26,
+                        height: 26,
+                        child: GestureDetector(
+                          onTap: clickable
+                              ? () {
+                                  setState(() {
+                                    _activePoi = poi;
+                                    _poiPopupVisible = true;
+                                  });
+                                }
+                              : null,
+                          child: _poiMarker(_letter(i), clickable),
+                        ),
+                      );
+                    }),
+                    if (_userLocation != null)
+                      Marker(
+                        point: _userLocation!,
+                        width: 18,
+                        height: 18,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.white, width: 1.5),
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
 
           /// HEADER
           _buildHeader(widget.trail),
 
-          /// POPUP POI
-          if (_poiPopupVisible && _activePoi != null)
-            PoiInfoPopup(
-              poi: _activePoi,
-              onClose: () {
-                setState(() {
-                  _poiPopupVisible = false;
-                  _activePoi = null;
-                });
-              },
+          /// POPUP POI ANIMADO
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 520),
+            curve: Curves.easeOutCubic,
+            left: 0,
+            right: 0,
+            bottom: _poiPopupVisible ? 0 : -380,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 500),
+              opacity: _poiPopupVisible ? 1 : 0,
+              child: _activePoi == null
+                  ? const SizedBox.shrink()
+                  : PoiInfoPopup(
+                      poi: _activePoi,
+                      onClose: () {
+                        setState(() {
+                          _poiPopupVisible = false;
+                          _activePoi = null;
+                        });
+                      },
+                    ),
             ),
+          ),
         ],
       ),
     );
   }
 
   // ===========================================================
-  // UI COMPONENTS
+  // UI
   // ===========================================================
   Widget _poiMarker(String text, bool active) {
     return Container(
@@ -385,9 +375,8 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
           padding: const EdgeInsets.fromLTRB(8, 10, 8, 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(24),
-            ),
+            borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.15),
@@ -426,8 +415,8 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                 spacing: 16,
                 runSpacing: 8,
                 children: [
-                  _buildInfoChip(Icons.route,
-                      "${trail['properties']['distance_km']} km"),
+                  _buildInfoChip(
+                      Icons.route, "${trail['properties']['distance_km']} km"),
                   _buildInfoChip(Icons.timer,
                       trail['properties']['duration_min'].toString()),
                   _buildInfoChip(
