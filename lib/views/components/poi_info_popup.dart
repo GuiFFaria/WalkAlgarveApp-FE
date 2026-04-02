@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 class PoiInfoPopup extends StatefulWidget {
   final dynamic poi;
@@ -30,6 +31,8 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
 
   @override
   Widget build(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+
     return Material(
       elevation: 20,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -42,12 +45,11 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
         ),
         child: Column(
           children: [
-            /// Header
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    widget.poi['properties']?['name'] ?? "Ponto de Interesse",
+                    widget.poi['properties']?['name'] ?? translations.poi_default_name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -65,26 +67,21 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
 
             const SizedBox(height: 8),
 
-            /// Paginator
             Expanded(
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (i) => setState(() => _pageIndex = i),
                 children: [
-                  _infoPage("Fauna", widget.poi['properties']?['fauna']),
-                  _infoPage("Flora", widget.poi['properties']?['flora']),
-                  _infoPage(
-                    "Geologia",
-                    widget.poi['properties']?['geology'],
-                  ),
-                  _messagesPage(),
+                  _infoPage(translations.fauna, widget.poi['properties']?['fauna'], translations),
+                  _infoPage(translations.flora, widget.poi['properties']?['flora'], translations),
+                  _infoPage(translations.geology, widget.poi['properties']?['geology'], translations),
+                  _messagesPage(translations),
                 ],
               ),
             ),
 
             const SizedBox(height: 8),
 
-            /// Dots
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -107,7 +104,7 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
     );
   }
 
-  Widget _infoPage(String title, dynamic content) {
+  Widget _infoPage(String title, dynamic content, AppLocalizations translations) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +115,7 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
           ),
           const SizedBox(height: 8),
           Text(
-            content?.toString() ?? "Sem informação disponível.",
+            content?.toString() ?? translations.no_info,
             style: const TextStyle(fontSize: 14),
           ),
         ],
@@ -126,13 +123,13 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
     );
   }
 
-  Widget _messagesPage() {
+  Widget _messagesPage(AppLocalizations translations) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Mensagens dos utilizadores",
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        Text(
+          translations.user_messages,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Expanded(
@@ -152,8 +149,7 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
             Expanded(
               child: TextField(
                 controller: _messageController,
-                decoration:
-                    const InputDecoration(hintText: "Deixa uma mensagem"),
+                decoration: InputDecoration(hintText: translations.leave_message),
               ),
             ),
             IconButton(

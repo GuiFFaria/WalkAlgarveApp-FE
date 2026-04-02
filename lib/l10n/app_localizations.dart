@@ -10,57 +10,6 @@ import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
 
-/// Callers can lookup localized strings with an instance of AppLocalizations
-/// returned by `AppLocalizations.of(context)`.
-///
-/// Applications need to include `AppLocalizations.delegate()` in their app's
-/// `localizationDelegates` list, and the locales they support in the app's
-/// `supportedLocales` list. For example:
-///
-/// ```dart
-/// import 'l10n/app_localizations.dart';
-///
-/// return MaterialApp(
-///   localizationsDelegates: AppLocalizations.localizationsDelegates,
-///   supportedLocales: AppLocalizations.supportedLocales,
-///   home: MyApplicationHome(),
-/// );
-/// ```
-///
-/// ## Update pubspec.yaml
-///
-/// Please make sure to update your pubspec.yaml to include the following
-/// packages:
-///
-/// ```yaml
-/// dependencies:
-///   # Internationalization support.
-///   flutter_localizations:
-///     sdk: flutter
-///   intl: any # Use the pinned version from flutter_localizations
-///
-///   # Rest of dependencies
-/// ```
-///
-/// ## iOS Applications
-///
-/// iOS applications define key application metadata, including supported
-/// locales, in an Info.plist file that is built into the application bundle.
-/// To configure the locales supported by your app, you’ll need to edit this
-/// file.
-///
-/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
-/// Then, in the Project Navigator, open the Info.plist file under the Runner
-/// project’s Runner folder.
-///
-/// Next, select the Information Property List item, select Add Item from the
-/// Editor menu, then select Localizations from the pop-up menu.
-///
-/// Select and expand the newly-created Localizations item then, for each
-/// locale your application supports, add a new item and select the locale
-/// you wish to add from the pop-up menu in the Value field. This list should
-/// be consistent with the languages listed in the AppLocalizations.supportedLocales
-/// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
     : localeName = intl.Intl.canonicalizedLocale(locale.toString());
@@ -74,16 +23,6 @@ abstract class AppLocalizations {
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
-  /// A list of this localizations delegate along with the default localizations
-  /// delegates.
-  ///
-  /// Returns a list of localizations delegates containing this delegate along with
-  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
-  /// and GlobalWidgetsLocalizations.delegate.
-  ///
-  /// Additional delegates can be added by appending to this list in
-  /// MaterialApp. This list does not have to be used at all if a custom list
-  /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
         delegate,
@@ -92,125 +31,92 @@ abstract class AppLocalizations {
         GlobalWidgetsLocalizations.delegate,
       ];
 
-  /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('pt'),
   ];
 
-  /// No description provided for @appTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Walk Algarve'**
+  // ── General ──────────────────────────────────────────────
   String get appTitle;
+  String get loading;
+  String get close;
+  String get back;
+  String get start;
+  String get description;
 
-  /// No description provided for @aboutZone.
-  ///
-  /// In en, this message translates to:
-  /// **'About this zone'**
-  String get aboutZone;
-
-  /// No description provided for @viewTrails.
-  ///
-  /// In en, this message translates to:
-  /// **'View Trails'**
-  String get viewTrails;
-
-  /// No description provided for @unlockZone.
-  ///
-  /// In en, this message translates to:
-  /// **'Buy Zone'**
-  String get unlockZone;
-
-  /// No description provided for @seeMore.
-  ///
-  /// In en, this message translates to:
-  /// **'See More'**
-  String get seeMore;
-
-  /// No description provided for @login.
-  ///
-  /// In en, this message translates to:
-  /// **'Login'**
-  String get login;
-
-  /// No description provided for @register.
-  ///
-  /// In en, this message translates to:
-  /// **'Register'**
-  String get register;
-
-  /// No description provided for @settings.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get settings;
-
-  /// No description provided for @profile.
-  ///
-  /// In en, this message translates to:
-  /// **'Profile'**
-  String get profile;
-
-  /// No description provided for @logout.
-  ///
-  /// In en, this message translates to:
-  /// **'Logout'**
-  String get logout;
-
-  /// No description provided for @account.
-  ///
-  /// In en, this message translates to:
-  /// **'Don\'t have an account?'**
-  String get account;
-
-  /// No description provided for @history.
-  ///
-  /// In en, this message translates to:
-  /// **'History'**
-  String get history;
-
-  /// No description provided for @trails.
-  ///
-  /// In en, this message translates to:
-  /// **'Trails'**
-  String get trails;
-
-  /// No description provided for @zones.
-  ///
-  /// In en, this message translates to:
-  /// **'Zones'**
+  // ── Navigation / Drawer ──────────────────────────────────
   String get zones;
+  String get trails;
+  String get history;
+  String get profile;
+  String get settings;
+  String get logout;
+  String get favorites;
+  String get explore;
+  String get account_section;
+  String get close_menu;
 
-  /// No description provided for @no_zones_available.
-  ///
-  /// In en, this message translates to:
-  /// **'No zones available.'**
+  // ── Auth ─────────────────────────────────────────────────
+  String get login;
+  String get register;
+  String get account;
+  String get email_label;
+  String get password_label;
+  String get confirm_password;
+  String get username_label;
+  String get fill_all_fields;
+  String get login_success;
+  String get login_failed;
+  String get passwords_no_match;
+  String get register_requires_internet;
+  String get register_success;
+  String get register_failed;
+  String get no_connection_login;
+  String get session_expired;
+
+  // ── Zones ─────────────────────────────────────────────────
+  String get aboutZone;
+  String get viewTrails;
+  String get unlockZone;
+  String get seeMore;
   String get no_zones_available;
-
-  /// No description provided for @no_trails_available.
-  ///
-  /// In en, this message translates to:
-  /// **'No trails available.'**
-  String get no_trails_available;
-
-  /// No description provided for @select_municipality.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Municipality'**
   String get select_municipality;
-
-  /// No description provided for @welcome.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to Algarve'**
-  String get welcome;
-
-  /// No description provided for @show_all.
-  ///
-  /// In en, this message translates to:
-  /// **'Show All'**
   String get show_all;
+  String get no_description;
+  String get redirecting_purchase;
+
+  // ── Trails ────────────────────────────────────────────────
+  String get no_trails_available;
+  String get untitled_trail;
+  String get bike_friendly;
+  String get no_bikes;
+
+  // ── Trail Map ─────────────────────────────────────────────
+  String get start_trail_title;
+  String get start_trail_body;
+
+  // ── POIs ──────────────────────────────────────────────────
+  String get poi_default_name;
+  String get fauna;
+  String get flora;
+  String get geology;
+  String get user_messages;
+  String get no_info;
+  String get leave_message;
+
+  // ── Profile ───────────────────────────────────────────────
+  String get welcome;
+  String get completed;
+  String get change_language;
+  String get change_password;
+  String get manage_offline_maps;
+  String get trail_history_option;
+
+  // ── Favorites ─────────────────────────────────────────────
+  String get favorite_added;
+  String get favorite_removed;
+  String get favorite_added_offline;
+  String get favorite_removed_offline;
 }
 
 class _AppLocalizationsDelegate
@@ -231,7 +137,6 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-  // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();

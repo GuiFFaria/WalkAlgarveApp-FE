@@ -26,7 +26,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     loadUserData();
   }
 
-  /// 🔑 Carrega dados guardados nas SharedPreferences
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString("user");
@@ -40,7 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// 🖼️ Escolher nova imagem de perfil
   Future<void> pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -54,7 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// 🚪 Logout
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("auth_token");
@@ -70,16 +67,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+
     return Scaffold(
       drawer: CustomDrawerWidget(),
-      appBar: CustomAppBarWidget(title: AppLocalizations.of(context)!.profile),
+      appBar: CustomAppBarWidget(title: translations.profile),
 
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 30),
 
-            // 🖼️ Avatar com botão de edição
             Stack(
               children: [
                 CircleAvatar(
@@ -98,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: pickImage,
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.teal,
                       ),
@@ -112,7 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 15),
 
             Text(
-              username ?? "Carregando...",
+              username ?? translations.loading,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
@@ -125,7 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 30),
 
-            // 📊 Estatísticas úteis
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Card(
@@ -135,10 +132,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: const [
-                      _ProfileStat(label: "Favoritos", value: "12"),
-                      _ProfileStat(label: "Concluídos", value: "8"),
-                      _ProfileStat(label: "Zonas", value: "3"),
+                    children: [
+                      _ProfileStat(label: translations.favorites, value: "12"),
+                      _ProfileStat(label: translations.completed, value: "8"),
+                      _ProfileStat(label: translations.zones, value: "3"),
                     ],
                   ),
                 ),
@@ -147,33 +144,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 30),
 
-            // ⚙️ Secção de opções
             _ProfileOption(
               icon: Icons.language,
-              label: "Alterar idioma",
+              label: translations.change_language,
               onTap: () {
                 // TODO: navegar para página de idioma
               },
             ),
             _ProfileOption(
               icon: Icons.lock,
-              label: "Alterar palavra-passe",
+              label: translations.change_password,
               onTap: () {},
             ),
             _ProfileOption(
               icon: Icons.download,
-              label: "Gerir mapas offline",
+              label: translations.manage_offline_maps,
               onTap: () {},
             ),
             _ProfileOption(
               icon: Icons.history,
-              label: "Histórico de trilhos",
+              label: translations.trail_history_option,
               onTap: () {},
             ),
 
             const SizedBox(height: 40),
 
-            // 🚪 Logout
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ElevatedButton.icon(
@@ -183,9 +178,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   backgroundColor: Colors.red,
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                label: const Text(
-                  "Logout",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                label: Text(
+                  translations.logout,
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ),

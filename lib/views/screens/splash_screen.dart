@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/screens/landingpage_screen.dart';
 import 'package:walk_algarve_app/views/screens/zones_list_screen.dart';
@@ -23,7 +24,6 @@ class _SplashScreenState extends State<SplashScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.loadToken();
 
-    // ⚡ Verifica conexão com a internet
     bool isOnline = true;
     try {
       final result = await InternetAddress.lookup('example.com');
@@ -34,22 +34,20 @@ class _SplashScreenState extends State<SplashScreen> {
       isOnline = false;
     }
 
-    await Future.delayed(const Duration(milliseconds: 800)); // Pequeno delay
+    await Future.delayed(const Duration(milliseconds: 800));
 
     if (authProvider.isLoggedIn) {
-      // Mesmo offline, o token guardado permite entrar
       print("User is logged in, navigating to ZonesListScreen");
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const ZonesListScreen()),
       );
     } else {
-      // Se não há token, mas está offline — mostra aviso
       if (!isOnline && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sem conexão — precisa fazer login online primeiro.'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.no_connection_login),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -62,17 +60,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF1BA6A1),
+    final translations = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF1BA6A1),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(height: 20),
+            const CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 20),
             Text(
-              'A carregar...',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              translations.loading,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
         ),

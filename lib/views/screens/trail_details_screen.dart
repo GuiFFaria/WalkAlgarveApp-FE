@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
 import 'package:walk_algarve_app/views/screens/trail_map_screen.dart';
@@ -16,6 +17,7 @@ class TrailDetailsScreen extends StatefulWidget {
 class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
   @override
   Widget build(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
     final trail = widget.trail;
     final locale = context.watch<LocaleProvider>().locale.languageCode;
 
@@ -23,14 +25,14 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
       trail,
       locale,
       "name",
-      fallback: "Untitled Trail",
+      fallback: translations.untitled_trail,
     );
 
     final description = TranslationHelper.getValue(
       trail,
       locale,
       "description",
-      fallback: trail["description"]?.toString() ?? "Sem descrição disponível.",
+      fallback: trail["description"]?.toString() ?? translations.no_description,
     );
 
     final is_bike_friendly = trail["properties"]?["is_bike_friendly"];
@@ -52,7 +54,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          /// 🔹 LAYER 1: IMAGEM DE CAPA
+          /// LAYER 1: IMAGEM DE CAPA
           Positioned(
             top: 0,
             left: 0,
@@ -67,7 +69,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
             ),
           ),
 
-          /// 🔹 LAYER 2: CARTÃO BRANCO (COMEÇA EM 280)
+          /// LAYER 2: CARTÃO BRANCO
           Positioned(
             top: 280,
             left: 0,
@@ -98,10 +100,9 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// Título da seção
-                      const Text(
-                        "Descrição",
-                        style: TextStyle(
+                      Text(
+                        translations.description,
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
@@ -109,11 +110,9 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                       ),
                       const SizedBox(height: 5),
 
-                      /// Container com a descrição
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
-                        
                         child: Text(
                           description,
                           textAlign: TextAlign.justify,
@@ -133,7 +132,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
             ),
           ),
 
-          /// 🔹 LAYER 3: TÍTULO E ÍCONES (SOBRE A IMAGEM)
+          /// LAYER 3: TÍTULO E ÍCONES
           Positioned(
             left: 20,
             right: 20,
@@ -141,7 +140,6 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// TÍTULO
                 Text(
                   title,
                   maxLines: 2,
@@ -161,7 +159,6 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
 
                 const SizedBox(height: 14),
 
-                /// ÍCONES
                 Wrap(
                   spacing: 25,
                   runSpacing: 8,
@@ -171,16 +168,16 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                     _iconText(Icons.cached, type),
                     _iconText(Icons.hiking, difficulty),
                     if (is_bike_friendly)
-                      _iconText(Icons.pedal_bike, "Bike Friendly")
+                      _iconText(Icons.pedal_bike, translations.bike_friendly)
                     else
-                      _iconText(Icons.block, "No Bikes"),
+                      _iconText(Icons.block, translations.no_bikes),
                   ],
                 ),
               ],
             ),
           ),
 
-          /// 🔹 LAYER 4: BOTÃO DO MAPA (SOBREPÕE TUDO)
+          /// LAYER 4: BOTÃO DO MAPA
           Positioned(
             top: 255,
             right: 25,
@@ -213,7 +210,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
             ),
           ),
 
-          /// 🔹 LAYER 5: BOTÃO VOLTAR (NO TOPO DE TUDO)
+          /// LAYER 5: BOTÃO VOLTAR
           Positioned(
             top: safeTop + 10,
             left: 10,
