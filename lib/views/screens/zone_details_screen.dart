@@ -11,6 +11,7 @@ class ZoneDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
     final locale = context.watch<LocaleProvider>().locale.languageCode;
 
     final imageUrl = zone["thumbnail_url"] ?? "";
@@ -18,10 +19,8 @@ class ZoneDetailsScreen extends StatelessWidget {
         ? (zone['translations']?['pt']?['name']?.toString() ?? '')
         : (zone['translations']?['en']?['name']?.toString() ?? '');
     final description = locale == "pt"
-        ? (zone['translations']?['pt']?['description']?.toString() ??
-            'Sem descrição disponível.')
-        : (zone['translations']?['en']?['description']?.toString() ??
-            'No description available');
+        ? (zone['translations']?['pt']?['description']?.toString() ?? translations.no_description)
+        : (zone['translations']?['en']?['description']?.toString() ?? translations.no_description);
     final bool userHasZone = zone["user_have"] == true;
 
     return Scaffold(
@@ -31,7 +30,6 @@ class ZoneDetailsScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // 🖼️ Imagem topo com loading
           SizedBox(
             width: double.infinity,
             height: 180,
@@ -61,7 +59,6 @@ class ZoneDetailsScreen extends StatelessWidget {
                 : Image.asset("assets/default.jpg", fit: BoxFit.cover),
           ),
 
-          // 📄 Conteúdo scrollável
           Expanded(
             child: SingleChildScrollView(
               child: Container(
@@ -72,7 +69,7 @@ class ZoneDetailsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.aboutZone,
+                      translations.aboutZone,
                       textAlign: TextAlign.left,
                       style: TextStyle(
                         fontSize: 20,
@@ -86,7 +83,7 @@ class ZoneDetailsScreen extends StatelessWidget {
                       textAlign: TextAlign.left,
                       style: const TextStyle(fontSize: 16, height: 1.4),
                     ),
-                    const SizedBox(height: 80), // espaço para botão
+                    const SizedBox(height: 80),
                   ],
                 ),
               ),
@@ -95,7 +92,6 @@ class ZoneDetailsScreen extends StatelessWidget {
         ],
       ),
 
-      // 📌 Botão no fundo
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -111,7 +107,6 @@ class ZoneDetailsScreen extends StatelessWidget {
               ),
               onPressed: () {
                 if (userHasZone) {
-                  // Navega para trilhos da zona
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -119,19 +114,16 @@ class ZoneDetailsScreen extends StatelessWidget {
                     ),
                   );
                 } else {
-                  // Lógica de compra (p.ex. abrir checkout)
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Redirecting to purchase..."),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: Text(translations.redirecting_purchase),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }
               },
               child: Text(
-                userHasZone
-                    ? AppLocalizations.of(context)!.viewTrails
-                    : AppLocalizations.of(context)!.unlockZone,
+                userHasZone ? translations.viewTrails : translations.unlockZone,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,

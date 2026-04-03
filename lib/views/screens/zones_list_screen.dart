@@ -249,9 +249,9 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Fechar",
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.close,
+                      style: const TextStyle(
                         color: Colors.redAccent,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,

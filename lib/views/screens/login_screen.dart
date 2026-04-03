@@ -8,7 +8,6 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
-
 import 'package:walk_algarve_app/views/screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,13 +25,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _loginUser() async {
     print("🔐 [Login] Login button pressed");
+    final translations = AppLocalizations.of(context)!;
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     String baseUrl = dotenv.env['API_BASE_URL']!;
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
+        SnackBar(content: Text(translations.fill_all_fields)),
       );
       return;
     }
@@ -57,7 +57,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // ✅ Extrair tokens conforme estrutura do backend
         final accessToken = data['access'];
         final refreshToken = data['refresh'];
         final user = data['user'];
@@ -70,7 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
           throw Exception("Access token not found in response!");
         }
 
-        // ✅ Guardar tokens localmente
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', accessToken);
         await prefs.setString('refresh_token', refreshToken ?? '');
@@ -78,17 +76,16 @@ class _LoginScreenState extends State<LoginScreen> {
         await Provider.of<AuthProvider>(context, listen: false).setToken(accessToken);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful!')),
+          SnackBar(content: Text(translations.login_success)),
         );
 
-        // ✅ Navegar para homepage
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const ZonesListScreen()),
         );
       } else {
         final data = jsonDecode(response.body);
-        String errorMessage = data['detail'] ?? 'Login failed';
+        String errorMessage = data['detail'] ?? translations.login_failed;
         print("❌ Login error: $errorMessage");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
@@ -98,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
       print("❌ Exception during login: $e");
       print(stack);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: $e')),
+        SnackBar(content: Text('${translations.login_failed}: $e')),
       );
     } finally {
       setState(() {
@@ -116,6 +113,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -128,8 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
               Text(
-                AppLocalizations.of(context)!.login,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                translations.login,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
 
@@ -138,11 +137,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 30.0),
                 child: TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: translations.email_label,
+                    border: const OutlineInputBorder(),
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   ),
                 ),
               ),
@@ -154,11 +153,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: TextField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: translations.password_label,
+                    border: const OutlineInputBorder(),
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   ),
                 ),
               ),
@@ -172,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _isLoading ? null : _loginUser,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                      : const Text('Login'),
+                      : Text(translations.login),
                 ),
               ),
               const SizedBox(height: 30),
@@ -181,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(AppLocalizations.of(context)!.account),
+                  Text(translations.account),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -190,8 +189,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     child: Text(
-                      AppLocalizations.of(context)!.register,
-                      style: TextStyle(
+                      translations.register,
+                      style: const TextStyle(
                         color: Colors.blue,
                         decoration: TextDecoration.underline,
                       ),

@@ -22,7 +22,6 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
     _loadUser();
   }
 
-  /// 🔍 Lê o objeto "user" das SharedPreferences e extrai o username
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString('user');
@@ -41,7 +40,7 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final local = AppLocalizations.of(context)!;
+    final translations = AppLocalizations.of(context)!;
 
     return Drawer(
       elevation: 10,
@@ -58,7 +57,6 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
         ),
         child: Column(
           children: [
-            // 🔹 Cabeçalho com username e botão fechar
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -75,7 +73,6 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Avatar
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -94,7 +91,6 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
                   ),
                   const SizedBox(width: 16),
 
-                  // Nome do utilizador e subtítulo
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,9 +105,9 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          "Bem-vindo ao Algarve 🌿",
-                          style: TextStyle(
+                        Text(
+                          translations.welcome,
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
                           ),
@@ -120,51 +116,49 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
                     ),
                   ),
 
-                  // Botão Fechar
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white, size: 26),
                     onPressed: () => Navigator.of(context).pop(),
                     splashRadius: 22,
-                    tooltip: 'Fechar menu',
+                    tooltip: translations.close_menu,
                   ),
                 ],
               ),
             ),
 
-            // 🔸 Lista de opções
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: ListView(
                   children: [
-                    _sectionTitle("Explorar"),
+                    _sectionTitle(translations.explore),
                     _drawerItem(
                       icon: Icons.terrain,
-                      label: local.zones,
+                      label: translations.zones,
                       onTap: () => _navigate(context, const ZonesListScreen()),
                     ),
                     _drawerItem(
                       icon: Icons.history,
-                      label: local.history,
+                      label: translations.history,
                       onTap: () => _navigate(context, const SettingsScreen()),
                     ),
                     const SizedBox(height: 10),
-                    _sectionTitle("Conta"),
+                    _sectionTitle(translations.account_section),
                     _drawerItem(
                       icon: Icons.person_outline,
-                      label: local.profile,
+                      label: translations.profile,
                       onTap: () => _navigate(context, const ProfileScreen()),
                     ),
                     _drawerItem(
                       icon: Icons.favorite_border,
-                      label: "Favoritos",
+                      label: translations.favorites,
                       onTap: () => _navigate(context, const SettingsScreen()),
                     ),
                     const SizedBox(height: 10),
-                    _sectionTitle("Definições"),
+                    _sectionTitle(translations.settings),
                     _drawerItem(
                       icon: Icons.settings_outlined,
-                      label: local.settings,
+                      label: translations.settings,
                       onTap: () => _navigate(context, const SettingsScreen()),
                     ),
                   ],
@@ -172,7 +166,6 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
               ),
             ),
 
-            // ⚙️ Rodapé
             Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(
@@ -181,9 +174,9 @@ class _CustomDrawerWidgetState extends State<CustomDrawerWidget> {
                   topLeft: Radius.circular(20),
                 ),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
                     "Walk Algarve v1.0.0",
                     style: TextStyle(fontSize: 12, color: Colors.black54),

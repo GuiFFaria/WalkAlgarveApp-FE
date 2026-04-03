@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
 import 'package:walk_algarve_app/views/screens/trail_details_screen.dart';
@@ -27,7 +28,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
   @override
   void initState() {
     super.initState();
-    
+
     final rawFavorite = widget.trail["properties"]?["is_favorite"];
 
     bool parsedFavorite;
@@ -51,15 +52,14 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  /// ❤️ Alternar favorito e sincronizar com backend
   Future<void> _toggleFavorite() async {
+    final translations = AppLocalizations.of(context)!;
     final trailId = widget.trail["id"];
     setState(() => isFavorite = !isFavorite);
 
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("auth_token");
 
-    // 🧼 Limpar token (tira aspas, espaços)
     if (token != null) {
       token = token.trim();
       if (token.startsWith('"') && token.endsWith('"')) {
@@ -68,13 +68,10 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       token = token.trim();
     }
 
-
-
     final baseUrl = dotenv.env['API_BASE_URL']!;
     final url = Uri.parse("$baseUrl/trails/");
     final hasInternet = await _checkConnection();
 
-    // 🗄️ Atualiza localmente no cache
     final cacheKey = "cached_trails_zone_${widget.trail["zone_id"] ?? "unknown"}";
     final cached = prefs.getString(cacheKey);
     if (cached != null) {
@@ -88,7 +85,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       await prefs.setString(cacheKey, jsonEncode(cachedTrails));
     }
 
-    // 📶 Offline → guarda pedido pendente
     if (!hasInternet || token == null || token.isEmpty) {
       final pendingKey = "pending_favorites";
       final pending = prefs.getString(pendingKey);
@@ -104,8 +100,8 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(isFavorite
-              ? "Guardado como favorito (offline)"
-              : "Removido dos favoritos (offline)"),
+              ? translations.favorite_added_offline
+              : translations.favorite_removed_offline),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -114,7 +110,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       return;
     }
 
-    // 🌐 Online → envia request POST
     try {
       final headers = {
         "Content-Type": "application/json",
@@ -134,16 +129,14 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isFavorite
-                ? "Adicionado aos favoritos"
-                : "Removido dos favoritos"),
+                ? translations.favorite_added
+                : translations.favorite_removed),
             duration: const Duration(seconds: 2),
           ),
         );
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Sessão expirada — por favor faça login novamente."),
-          ),
+          SnackBar(content: Text(translations.session_expired)),
         );
       } else {
         debugPrint("⚠️ Erro ao sincronizar favorito: ${response.body}");
@@ -157,6 +150,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
     final trail = widget.trail;
     final locale = context.watch<LocaleProvider>().locale.languageCode;
 
@@ -164,7 +158,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       trail,
       locale,
       "name",
-      fallback: "Untitled Trail",
+      fallback: translations.untitled_trail,
     );
 
     final imageUrl = trail["properties"]?["thumbnail_url"]?.toString() ?? "";
@@ -175,7 +169,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
 
     return GestureDetector(
       onTap: () {
-        // TODO: Navegar para detalhes do trilho
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -193,7 +186,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              // 🖼️ Imagem do trilho
               CachedNetworkImage(
                 imageUrl: imageUrl.isNotEmpty
                     ? imageUrl
@@ -213,7 +205,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
                 ),
               ),
 
-              // Gradiente escuro
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -229,7 +220,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
                 ),
               ),
 
-              // ❤️ Ícone de favorito
               Positioned(
                 top: 12,
                 right: 12,
@@ -243,7 +233,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
                 ),
               ),
 
-              // 📝 Informação
               Positioned(
                 left: 16,
                 bottom: 16,

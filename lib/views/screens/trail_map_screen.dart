@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 import 'package:walk_algarve_app/views/helpers/debug_helper.dart';
 import 'package:walk_algarve_app/views/components/poi_info_popup.dart';
@@ -23,19 +24,16 @@ class TrailMapScreen extends StatefulWidget {
 class _TrailMapScreenState extends State<TrailMapScreen> {
   final MapController _mapController = MapController();
 
-  /// Estado do trilho
   int _currentPoiIndex = 0;
   bool _trailStarted = false;
 
-  /// Localização
   StreamSubscription<Position>? _positionStream;
   LatLng? _userLocation;
 
-  /// POI popup
   dynamic _activePoi;
   bool _poiPopupVisible = false;
 
-  static const double poiActivationRadius = 25; // metros
+  static const double poiActivationRadius = 25;
 
   @override
   void initState() {
@@ -60,9 +58,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     super.dispose();
   }
 
-  // ===========================================================
-  // ORDENAR POIs
-  // ===========================================================
   void _sortPois() {
     final pois = widget.trail['properties']?['pois']?['features'];
     final path = widget.trail['geometry']?['coordinates'];
@@ -84,11 +79,10 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     pois.sort((a, b) => distToStart(a).compareTo(distToStart(b)));
   }
 
-  // ===========================================================
-  // POPUP INICIAL
-  // ===========================================================
   void _showStartPopup() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final translations = AppLocalizations.of(context)!;
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -100,13 +94,13 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  "Iniciar trilho?",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  translations.start_trail_title,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  "Deseja iniciar o percurso agora?",
+                Text(
+                  translations.start_trail_body,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -115,14 +109,14 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("Voltar"),
+                      child: Text(translations.back),
                     ),
                     ElevatedButton(
                       onPressed: () async {
                         Navigator.pop(context);
                         await _startTrail();
                       },
-                      child: const Text("Iniciar"),
+                      child: Text(translations.start),
                     ),
                   ],
                 ),
@@ -134,9 +128,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     });
   }
 
-  // ===========================================================
-  // INICIAR TRILHO
-  // ===========================================================
   Future<void> _startTrail() async {
     _trailStarted = true;
     await _enableLocationTracking();
@@ -146,9 +137,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     }
   }
 
-  // ===========================================================
-  // LOCALIZAÇÃO + POIs
-  // ===========================================================
   Future<void> _enableLocationTracking() async {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) return;
@@ -207,9 +195,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     return d <= poiActivationRadius;
   }
 
-  // ===========================================================
-  // EXTRAÇÃO
-  // ===========================================================
   List<LatLng> _extractPath() {
     final coords = widget.trail['geometry']['coordinates'];
     return coords.map<LatLng>((c) => LatLng(c[1], c[0])).toList();
@@ -220,9 +205,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
 
   String _letter(int index) => String.fromCharCode(65 + index);
 
-  // ===========================================================
-  // BUILD
-  // ===========================================================
   @override
   Widget build(BuildContext context) {
     final path = _extractPath();
@@ -235,9 +217,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          /// =========================
-          /// MAPA (COM OFFSET SAFEAREA)
-          /// =========================
           Padding(
             padding: EdgeInsets.only(
               top: MediaQuery.of(context).padding.top,
@@ -312,10 +291,8 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
             ),
           ),
 
-          /// HEADER
           _buildHeader(widget.trail),
 
-          /// POPUP POI ANIMADO
           AnimatedPositioned(
             duration: const Duration(milliseconds: 520),
             curve: Curves.easeOutCubic,
@@ -343,9 +320,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     );
   }
 
-  // ===========================================================
-  // UI
-  // ===========================================================
   Widget _poiMarker(String text, bool active) {
     return Container(
       decoration: BoxDecoration(
