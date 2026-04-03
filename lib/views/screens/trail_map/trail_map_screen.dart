@@ -25,10 +25,23 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   final MapController _mapController = MapController();
 
   int _currentPoiIndex = 0;
-  bool _trailStarted = false;
+  bool _trailStarted = true;
 
   StreamSubscription<Position>? _positionStream;
   LatLng? _userLocation;
+
+  // DEBUG: hardcoded location near POI A to test popup
+  void _setDebugLocationNearPoiA() {
+    final pois = _extractPois();
+    if (pois.isEmpty) return;
+    final c = pois[0]['geometry']['coordinates'];
+    // offset ~10m north so it's within the 25m activation radius
+    setState(() {
+      _userLocation = LatLng(c[1] + 0.00009, c[0]);
+      _activePoi = pois[0];
+      _poiPopupVisible = true;
+    });
+  }
 
   dynamic _activePoi;
   bool _poiPopupVisible = false;
@@ -47,6 +60,8 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       DebugLogger.warn("TrailMap", "Erro ao ordenar POIs — ignorado");
       DebugLogger.error("TrailMap", "Sort POIs", e);
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _setDebugLocationNearPoiA());
 
     _showStartPopup();
   }
@@ -154,31 +169,32 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
 
       if (pois == null || pois.isEmpty) return;
 
-      _positionStream =
-          Geolocator.getPositionStream().listen((Position pos) {
-        final user = LatLng(pos.latitude, pos.longitude);
+      // DEBUG: real-time location tracking disabled while testing hardcoded location
+      // _positionStream =
+      //     Geolocator.getPositionStream().listen((Position pos) {
+      //   final user = LatLng(pos.latitude, pos.longitude);
 
-        setState(() => _userLocation = user);
+      //   setState(() => _userLocation = user);
 
-        for (final poi in pois) {
-          if (_isUserNearPoi(user, poi)) {
-            if (_activePoi != poi) {
-              setState(() {
-                _activePoi = poi;
-                _poiPopupVisible = true;
-              });
-            }
-            return;
-          }
-        }
+      //   for (final poi in pois) {
+      //     if (_isUserNearPoi(user, poi)) {
+      //       if (_activePoi != poi) {
+      //         setState(() {
+      //           _activePoi = poi;
+      //           _poiPopupVisible = true;
+      //         });
+      //       }
+      //       return;
+      //     }
+      //   }
 
-        if (_poiPopupVisible) {
-          setState(() {
-            _poiPopupVisible = false;
-            _activePoi = null;
-          });
-        }
-      });
+      //   if (_poiPopupVisible) {
+      //     setState(() {
+      //       _poiPopupVisible = false;
+      //       _activePoi = null;
+      //     });
+      //   }
+      // });
     } catch (e) {
       DebugLogger.error("TrailMap", "Erro no tracking", e);
     }
@@ -234,6 +250,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                 TileLayer(
                   urlTemplate:
                       "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  userAgentPackageName: 'com.example.walk_algarve_app',
                 ),
                 PolylineLayer(
                   polylines: [

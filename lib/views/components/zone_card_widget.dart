@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
-import 'package:walk_algarve_app/views/screens/zone_details_screen.dart';
+import 'package:walk_algarve_app/views/screens/zone_details/zone_details_screen.dart';
 
 class ZoneCardWidget extends StatefulWidget {
   final Map<String, dynamic> zone;

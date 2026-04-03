@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
-import 'package:walk_algarve_app/views/screens/trails_list_screen.dart';
+import 'package:walk_algarve_app/views/screens/trails_list/trails_list_screen.dart';
 
 class ZoneDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> zone;

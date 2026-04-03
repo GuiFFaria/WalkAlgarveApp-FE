@@ -9,7 +9,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
-import 'package:walk_algarve_app/views/screens/trail_details_screen.dart';
+import 'package:walk_algarve_app/views/screens/trail_details/trail_details_screen.dart';
 
 class TrailCardWidget extends StatefulWidget {
   final Map<String, dynamic> trail;

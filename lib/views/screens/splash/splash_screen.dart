@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
-import 'package:walk_algarve_app/views/screens/landingpage_screen.dart';
-import 'package:walk_algarve_app/views/screens/zones_list_screen.dart';
+import 'package:walk_algarve_app/views/screens/landing/landingpage_screen.dart';
+import 'package:walk_algarve_app/views/screens/zones_list/zones_list_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
