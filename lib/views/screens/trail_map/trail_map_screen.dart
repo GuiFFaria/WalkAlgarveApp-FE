@@ -162,7 +162,9 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       }
 
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) return;
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
 
       final pois =
           widget.trail['properties']?['pois']?['features'] as List<dynamic>?;
