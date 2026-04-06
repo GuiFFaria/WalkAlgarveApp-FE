@@ -5,17 +5,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
-
+import 'package:walk_algarve_app/views/components/poi_info_popup/poi_info_popup.dart';
 import 'package:walk_algarve_app/views/helpers/debug_helper.dart';
-import 'package:walk_algarve_app/views/components/poi_info_popup.dart';
+import 'trail_map_screen.functions.dart';
 
 class TrailMapScreen extends StatefulWidget {
   final dynamic trail;
 
-  const TrailMapScreen({
-    super.key,
-    required this.trail,
-  });
+  const TrailMapScreen({super.key, required this.trail});
 
   @override
   State<TrailMapScreen> createState() => _TrailMapScreenState();
@@ -30,38 +27,24 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   StreamSubscription<Position>? _positionStream;
   LatLng? _userLocation;
 
-  // DEBUG: hardcoded location near POI A to test popup
-  void _setDebugLocationNearPoiA() {
-    final pois = _extractPois();
-    if (pois.isEmpty) return;
-    final c = pois[0]['geometry']['coordinates'];
-    // offset ~10m north so it's within the 25m activation radius
-    setState(() {
-      _userLocation = LatLng(c[1] + 0.00009, c[0]);
-      _activePoi = pois[0];
-      _poiPopupVisible = true;
-    });
-  }
-
   dynamic _activePoi;
   bool _poiPopupVisible = false;
-
-  static const double poiActivationRadius = 25;
 
   @override
   void initState() {
     super.initState();
-
     DebugLogger.info("TrailMap", "Inicialização da página");
 
     try {
-      _sortPois();
+      sortPoisByDistanceFromStart(widget.trail);
     } catch (e) {
       DebugLogger.warn("TrailMap", "Erro ao ordenar POIs — ignorado");
       DebugLogger.error("TrailMap", "Sort POIs", e);
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _setDebugLocationNearPoiA());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _setDebugLocationNearPoiA(),
+    );
 
     _showStartPopup();
   }
@@ -73,37 +56,29 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     super.dispose();
   }
 
-  void _sortPois() {
-    final pois = widget.trail['properties']?['pois']?['features'];
-    final path = widget.trail['geometry']?['coordinates'];
-
-    if (pois == null || path == null || pois.isEmpty || path.isEmpty) return;
-
-    final start = LatLng(path.first[1], path.first[0]);
-
-    double distToStart(dynamic poi) {
-      final c = poi['geometry']['coordinates'];
-      return Geolocator.distanceBetween(
-        start.latitude,
-        start.longitude,
-        c[1],
-        c[0],
-      );
-    }
-
-    pois.sort((a, b) => distToStart(a).compareTo(distToStart(b)));
+  // DEBUG: hardcoded location near POI A to test popup
+  void _setDebugLocationNearPoiA() {
+    final pois = extractPois(widget.trail);
+    if (pois.isEmpty) return;
+    final c = pois[0]['geometry']['coordinates'];
+    // offset ~10m north so it's within the 25m activation radius
+    setState(() {
+      _userLocation = LatLng(c[1] + 0.00009, c[0]);
+      _activePoi = pois[0];
+      _poiPopupVisible = true;
+    });
   }
 
   void _showStartPopup() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final translations = AppLocalizations.of(context)!;
-
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -111,7 +86,10 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
               children: [
                 Text(
                   translations.start_trail_title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -146,7 +124,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   Future<void> _startTrail() async {
     _trailStarted = true;
     await _enableLocationTracking();
-
     if (_userLocation != null) {
       _mapController.move(_userLocation!, 17);
     }
@@ -166,20 +143,15 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
         return;
       }
 
-      final pois =
-          widget.trail['properties']?['pois']?['features'] as List<dynamic>?;
-
-      if (pois == null || pois.isEmpty) return;
+      final pois = extractPois(widget.trail);
+      if (pois.isEmpty) return;
 
       // DEBUG: real-time location tracking disabled while testing hardcoded location
-      // _positionStream =
-      //     Geolocator.getPositionStream().listen((Position pos) {
+      // _positionStream = Geolocator.getPositionStream().listen((Position pos) {
       //   final user = LatLng(pos.latitude, pos.longitude);
-
       //   setState(() => _userLocation = user);
-
       //   for (final poi in pois) {
-      //     if (_isUserNearPoi(user, poi)) {
+      //     if (isUserNearPoi(user, poi)) {
       //       if (_activePoi != poi) {
       //         setState(() {
       //           _activePoi = poi;
@@ -189,7 +161,6 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       //       return;
       //     }
       //   }
-
       //   if (_poiPopupVisible) {
       //     setState(() {
       //       _poiPopupVisible = false;
@@ -202,139 +173,121 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     }
   }
 
-  bool _isUserNearPoi(LatLng user, dynamic poi) {
-    final c = poi['geometry']['coordinates'];
-    final d = Geolocator.distanceBetween(
-      user.latitude,
-      user.longitude,
-      c[1],
-      c[0],
-    );
-    return d <= poiActivationRadius;
-  }
-
-  List<LatLng> _extractPath() {
-    final coords = widget.trail['geometry']['coordinates'];
-    return coords.map<LatLng>((c) => LatLng(c[1], c[0])).toList();
-  }
-
-  List<dynamic> _extractPois() =>
-      widget.trail['properties']?['pois']?['features'] ?? [];
-
-  String _letter(int index) => String.fromCharCode(65 + index);
-
   @override
   Widget build(BuildContext context) {
-    final path = _extractPath();
-    final pois = _extractPois();
-
-    int visiblePois = !_trailStarted
+    final path = extractPath(widget.trail);
+    final pois = extractPois(widget.trail);
+    final visiblePois = !_trailStarted
         ? 2
         : (_currentPoiIndex + 2).clamp(0, pois.length);
 
     return Scaffold(
       body: Stack(
         children: [
-          Padding(
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top,
-            ),
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter:
-                    path.isNotEmpty ? path.first : const LatLng(0, 0),
-                initialZoom: 17,
-                interactionOptions:
-                    const InteractionOptions(flags: InteractiveFlag.all),
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate:
-                      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  userAgentPackageName: 'com.example.walk_algarve_app',
-                ),
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: path,
-                      strokeWidth: 5,
-                      color: const Color(0xFF4A90E2),
-                    ),
-                  ],
-                ),
-                MarkerLayer(
-                  markers: [
-                    ...List.generate(visiblePois, (i) {
-                      final poi = pois[i];
-                      final c = poi['geometry']['coordinates'];
-                      final point = LatLng(c[1], c[0]);
-
-                      final clickable = _userLocation != null &&
-                          _isUserNearPoi(_userLocation!, poi);
-
-                      return Marker(
-                        point: point,
-                        width: 26,
-                        height: 26,
-                        child: GestureDetector(
-                          onTap: clickable
-                              ? () {
-                                  setState(() {
-                                    _activePoi = poi;
-                                    _poiPopupVisible = true;
-                                  });
-                                }
-                              : null,
-                          child: _poiMarker(_letter(i), clickable),
-                        ),
-                      );
-                    }),
-                    if (_userLocation != null)
-                      Marker(
-                        point: _userLocation!,
-                        width: 18,
-                        height: 18,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.white, width: 1.5),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
+          _buildMap(path, pois, visiblePois),
           _buildHeader(widget.trail),
+          _buildPoiPopup(),
+        ],
+      ),
+    );
+  }
 
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 520),
-            curve: Curves.easeOutCubic,
-            left: 0,
-            right: 0,
-            bottom: _poiPopupVisible ? 0 : -380,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 500),
-              opacity: _poiPopupVisible ? 1 : 0,
-              child: _activePoi == null
-                  ? const SizedBox.shrink()
-                  : PoiInfoPopup(
-                      poi: _activePoi,
-                      onClose: () {
-                        setState(() {
-                          _poiPopupVisible = false;
-                          _activePoi = null;
-                        });
-                      },
-                    ),
-            ),
+  Widget _buildMap(List<LatLng> path, List<dynamic> pois, int visiblePois) {
+    return Padding(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      child: FlutterMap(
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: path.isNotEmpty ? path.first : const LatLng(0, 0),
+          initialZoom: 17,
+          interactionOptions: const InteractionOptions(
+            flags: InteractiveFlag.all,
+          ),
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            userAgentPackageName: 'com.example.walk_algarve_app',
+          ),
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: path,
+                strokeWidth: 5,
+                color: const Color(0xFF4A90E2),
+              ),
+            ],
+          ),
+          MarkerLayer(
+            markers: [
+              ..._buildPoiMarkers(pois, visiblePois),
+              if (_userLocation != null) _buildUserMarker(),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  List<Marker> _buildPoiMarkers(List<dynamic> pois, int visiblePois) {
+    return List.generate(visiblePois, (i) {
+      final poi = pois[i];
+      final c = poi['geometry']['coordinates'];
+      final point = LatLng(c[1], c[0]);
+      final clickable =
+          _userLocation != null && isUserNearPoi(_userLocation!, poi);
+
+      return Marker(
+        point: point,
+        width: 26,
+        height: 26,
+        child: GestureDetector(
+          onTap: clickable
+              ? () => setState(() {
+                  _activePoi = poi;
+                  _poiPopupVisible = true;
+                })
+              : null,
+          child: _poiMarker(poiLetter(i), clickable),
+        ),
+      );
+    });
+  }
+
+  Marker _buildUserMarker() {
+    return Marker(
+      point: _userLocation!,
+      width: 18,
+      height: 18,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.red,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPoiPopup() {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 520),
+      curve: Curves.easeOutCubic,
+      left: 0,
+      right: 0,
+      bottom: _poiPopupVisible ? 0 : -380,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 500),
+        opacity: _poiPopupVisible ? 1 : 0,
+        child: _activePoi == null
+            ? const SizedBox.shrink()
+            : PoiInfoPopup(
+                poi: _activePoi,
+                onClose: () => setState(() {
+                  _poiPopupVisible = false;
+                  _activePoi = null;
+                }),
+              ),
       ),
     );
   }
@@ -368,8 +321,9 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
           padding: const EdgeInsets.fromLTRB(8, 10, 8, 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius:
-                const BorderRadius.vertical(bottom: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(24),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.15),
@@ -409,13 +363,18 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                 runSpacing: 8,
                 children: [
                   _buildInfoChip(
-                      Icons.route, "${trail['properties']['distance_km']} km"),
-                  _buildInfoChip(Icons.timer,
-                      trail['properties']['duration_min'].toString()),
+                    Icons.route,
+                    "${trail['properties']['distance_km']} km",
+                  ),
                   _buildInfoChip(
-                      Icons.refresh, trail['properties']['trail_type']),
+                    Icons.timer,
+                    trail['properties']['duration_min'].toString(),
+                  ),
                   _buildInfoChip(
-                      Icons.flag, trail['properties']['difficulty']),
+                    Icons.refresh,
+                    trail['properties']['trail_type'],
+                  ),
+                  _buildInfoChip(Icons.flag, trail['properties']['difficulty']),
                 ],
               ),
             ],
