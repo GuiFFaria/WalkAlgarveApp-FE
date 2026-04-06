@@ -70,5 +70,12 @@
   "favorite_added": "Adicionado aos favoritos",
   "favorite_removed": "Removido dos favoritos",
   "favorite_added_offline": "Guardado como favorito (offline)",
-  "favorite_removed_offline": "Removido dos favoritos (offline)"
+  "favorite_removed_offline": "Removido dos favoritos (offline)",
+
+  "finish_trail_button": "Terminar Trilho",
+  "finish_trail_title": "Terminar Trilho?",
+  "finish_trail_body": "Está prestes a terminar este trilho. Como foi a sua experiência?",
+  "finish_trail_rating": "Avaliar este trilho",
+  "finish_trail_notes_hint": "Deixe uma nota (opcional)...",
+  "finish": "Terminar"
 }

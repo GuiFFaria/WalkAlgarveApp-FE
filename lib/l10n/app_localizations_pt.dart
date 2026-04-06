@@ -203,4 +203,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get favorite_removed_offline => 'Removido dos favoritos (offline)';
+
+  @override
+  String get finish_trail_button => 'Terminar Trilho';
+
+  @override
+  String get finish_trail_title => 'Terminar Trilho?';
+
+  @override
+  String get finish_trail_body =>
+      'Está prestes a terminar este trilho. Como foi a sua experiência?';
+
+  @override
+  String get finish_trail_rating => 'Avaliar este trilho';
+
+  @override
+  String get finish_trail_notes_hint => 'Deixe uma nota (opcional)...';
+
+  @override
+  String get finish => 'Terminar';
 }
