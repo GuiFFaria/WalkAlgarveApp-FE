@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
-import 'package:walk_algarve_app/views/screens/splash_screen.dart';
+import 'package:walk_algarve_app/views/screens/splash/splash_screen.dart';
 
 
 Future<void> main() async {

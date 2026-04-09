@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
-import 'package:walk_algarve_app/views/components/custom_appbar_widget.dart';
-import 'package:walk_algarve_app/views/components/custom_drawer_widget.dart';
-import 'package:walk_algarve_app/views/screens/login_screen.dart';
+import 'package:walk_algarve_app/views/components/custom_appbar/custom_appbar_widget.dart';
+import 'package:walk_algarve_app/views/components/custom_drawer/custom_drawer_widget.dart';
+import 'package:walk_algarve_app/views/screens/login/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
