@@ -5,11 +5,7 @@ class PoiInfoPopup extends StatefulWidget {
   final dynamic poi;
   final VoidCallback onClose;
 
-  const PoiInfoPopup({
-    super.key,
-    required this.poi,
-    required this.onClose,
-  });
+  const PoiInfoPopup({super.key, required this.poi, required this.onClose});
 
   @override
   State<PoiInfoPopup> createState() => _PoiInfoPopupState();
@@ -37,7 +33,7 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
       elevation: 20,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: Container(
-        height: 360,
+        height: 600,
         padding: const EdgeInsets.all(16),
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -49,7 +45,8 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.poi['properties']?['name'] ?? translations.poi_default_name,
+                    widget.poi['properties']?['name'] ??
+                        translations.poi_default_name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -72,9 +69,21 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
                 controller: _pageController,
                 onPageChanged: (i) => setState(() => _pageIndex = i),
                 children: [
-                  _infoPage(translations.fauna, widget.poi['properties']?['fauna'], translations),
-                  _infoPage(translations.flora, widget.poi['properties']?['flora'], translations),
-                  _infoPage(translations.geology, widget.poi['properties']?['geology'], translations),
+                  _infoPage(
+                    translations.fauna,
+                    widget.poi['properties']?['fauna'],
+                    translations,
+                  ),
+                  _infoPage(
+                    translations.flora,
+                    widget.poi['properties']?['flora'],
+                    translations,
+                  ),
+                  _infoPage(
+                    translations.geology,
+                    widget.poi['properties']?['geology'],
+                    translations,
+                  ),
                   _messagesPage(translations),
                 ],
               ),
@@ -91,8 +100,7 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
                   width: _pageIndex == i ? 10 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color:
-                        _pageIndex == i ? Colors.blue : Colors.grey.shade400,
+                    color: _pageIndex == i ? Colors.blue : Colors.grey.shade400,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -104,7 +112,11 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
     );
   }
 
-  Widget _infoPage(String title, dynamic content, AppLocalizations translations) {
+  Widget _infoPage(
+    String title,
+    dynamic content,
+    AppLocalizations translations,
+  ) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,7 +161,9 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
             Expanded(
               child: TextField(
                 controller: _messageController,
-                decoration: InputDecoration(hintText: translations.leave_message),
+                decoration: InputDecoration(
+                  hintText: translations.leave_message,
+                ),
               ),
             ),
             IconButton(
@@ -161,9 +175,9 @@ class _PoiInfoPopupState extends State<PoiInfoPopup> {
                   _messageController.clear();
                 });
               },
-            )
+            ),
           ],
-        )
+        ),
       ],
     );
   }

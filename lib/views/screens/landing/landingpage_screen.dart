@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:walk_algarve_app/views/screens/login_screen.dart';
+import 'package:walk_algarve_app/views/screens/login/login_screen.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 class LandingpageScreen extends StatefulWidget {

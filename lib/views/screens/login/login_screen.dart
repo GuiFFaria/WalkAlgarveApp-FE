@@ -3,12 +3,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
-import 'package:walk_algarve_app/views/screens/zones_list_screen.dart';
+import 'package:walk_algarve_app/views/screens/zones_list/zones_list_screen.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
-import 'package:walk_algarve_app/views/screens/register_screen.dart';
+import 'package:walk_algarve_app/views/screens/register/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

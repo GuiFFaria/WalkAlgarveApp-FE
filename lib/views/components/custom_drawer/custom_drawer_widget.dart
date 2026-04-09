@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
-import 'package:walk_algarve_app/views/screens/profile_screen.dart';
-import 'package:walk_algarve_app/views/screens/settings_screen.dart';
-import 'package:walk_algarve_app/views/screens/zones_list_screen.dart';
+import 'package:walk_algarve_app/views/screens/profile/profile_screen.dart';
+import 'package:walk_algarve_app/views/screens/settings/settings_screen.dart';
+import 'package:walk_algarve_app/views/screens/zones_list/zones_list_screen.dart';
 
 class CustomDrawerWidget extends StatefulWidget {
   const CustomDrawerWidget({super.key});

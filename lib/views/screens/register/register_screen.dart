@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
-import 'package:walk_algarve_app/views/screens/login_screen.dart';
+import 'package:walk_algarve_app/views/screens/login/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

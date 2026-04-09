@@ -9,14 +9,19 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
-import 'package:walk_algarve_app/views/screens/trail_details_screen.dart';
+import 'package:walk_algarve_app/views/screens/trail_details/trail_details_screen.dart';
 
 class TrailCardWidget extends StatefulWidget {
   final Map<String, dynamic> trail;
   final int index;
   final VoidCallback? onFavoriteToggled;
 
-  const TrailCardWidget(this.trail, this.index, {super.key, this.onFavoriteToggled});
+  const TrailCardWidget(
+    this.trail,
+    this.index, {
+    super.key,
+    this.onFavoriteToggled,
+  });
 
   @override
   State<TrailCardWidget> createState() => _TrailCardWidgetState();
@@ -72,7 +77,8 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     final url = Uri.parse("$baseUrl/trails/");
     final hasInternet = await _checkConnection();
 
-    final cacheKey = "cached_trails_zone_${widget.trail["zone_id"] ?? "unknown"}";
+    final cacheKey =
+        "cached_trails_zone_${widget.trail["zone_id"] ?? "unknown"}";
     final cached = prefs.getString(cacheKey);
     if (cached != null) {
       final List<Map<String, dynamic>> cachedTrails =
@@ -88,8 +94,9 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     if (!hasInternet || token == null || token.isEmpty) {
       final pendingKey = "pending_favorites";
       final pending = prefs.getString(pendingKey);
-      final List<Map<String, dynamic>> pendingList =
-          pending != null ? List<Map<String, dynamic>>.from(jsonDecode(pending)) : [];
+      final List<Map<String, dynamic>> pendingList = pending != null
+          ? List<Map<String, dynamic>>.from(jsonDecode(pending))
+          : [];
 
       pendingList.add({
         "trail_id": trailId,
@@ -99,9 +106,11 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       await prefs.setString(pendingKey, jsonEncode(pendingList));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFavorite
-              ? translations.favorite_added_offline
-              : translations.favorite_removed_offline),
+          content: Text(
+            isFavorite
+                ? translations.favorite_added_offline
+                : translations.favorite_removed_offline,
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -123,21 +132,25 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
         body: jsonEncode({"trail_id": trailId}),
       );
 
-      debugPrint("📤 Favorito response: ${response.statusCode} - ${response.body}");
+      debugPrint(
+        "📤 Favorito response: ${response.statusCode} - ${response.body}",
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isFavorite
-                ? translations.favorite_added
-                : translations.favorite_removed),
+            content: Text(
+              isFavorite
+                  ? translations.favorite_added
+                  : translations.favorite_removed,
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
       } else if (response.statusCode == 401 || response.statusCode == 403) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(translations.session_expired)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(translations.session_expired)));
       } else {
         debugPrint("⚠️ Erro ao sincronizar favorito: ${response.body}");
       }
@@ -164,7 +177,8 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     final imageUrl = trail["properties"]?["thumbnail_url"]?.toString() ?? "";
     final distance = trail["properties"]?["distance_km"]?.toString() ?? "-";
     final duration = trail["properties"]?["duration_min"]?.toString() ?? "-";
-    final type = trail["properties"]?["trail_type"]?.toString().toLowerCase() ?? "-";
+    final type =
+        trail["properties"]?["trail_type"]?.toString().toLowerCase() ?? "-";
     final difficulty = trail["properties"]?["difficulty"]?.toString() ?? "-";
 
     return GestureDetector(
@@ -178,10 +192,8 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        height: 170,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        height: 200,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Stack(
@@ -278,7 +290,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
         const SizedBox(width: 3),
         Text(
           text == "-" ? text : "$text$suffix",
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          style: const TextStyle(color: Colors.white, fontSize: 15),
           overflow: TextOverflow.ellipsis,
         ),
       ],

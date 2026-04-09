@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
-import 'package:walk_algarve_app/views/screens/zone_details_screen.dart';
+import 'package:walk_algarve_app/views/screens/zone_details/zone_details_screen.dart';
 
 class ZoneCardWidget extends StatefulWidget {
   final Map<String, dynamic> zone;
@@ -22,18 +22,16 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
     final locale = context.watch<LocaleProvider>().locale.languageCode;
 
     final title = locale == "pt"
-      ? (zone['translations']?['pt']?['name']?.toString() ?? '')
-      : (zone['translations']?['en']?['name']?.toString() ?? '');
+        ? (zone['translations']?['pt']?['name']?.toString() ?? '')
+        : (zone['translations']?['en']?['name']?.toString() ?? '');
     final imageUrl = zone["thumbnail_url"]?.toString() ?? "";
     final municipalityName = zone["municipality"]?["name"]?.toString() ?? "-";
     final bool userHasZone = zone["user_have"] == true;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      height: 170,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      height: 200,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
@@ -45,7 +43,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                   : 'https://via.placeholder.com/400x200.png?text=No+Image',
               fit: BoxFit.cover,
               width: double.infinity,
-              height: 170,
+              height: 200,
               placeholder: (context, url) => Container(
                 color: Colors.grey.shade300,
                 child: const Center(child: CircularProgressIndicator()),
@@ -54,7 +52,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                 "assets/images/default.jpg",
                 fit: BoxFit.cover,
                 width: double.infinity,
-                height: 170,
+                height: 200,
               ),
             ),
 
@@ -65,10 +63,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.center,
-                    colors: [
-                      Colors.black.withOpacity(0.6),
-                      Colors.transparent,
-                    ],
+                    colors: [Colors.black.withOpacity(0.6), Colors.transparent],
                   ),
                 ),
               ),
@@ -91,13 +86,15 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                       shadows: [Shadow(color: Colors.black, blurRadius: 6)],
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     municipalityName,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
-                      fontSize: 14,
-                      shadows: const [Shadow(color: Colors.black, blurRadius: 6)],
+                      fontSize: 16,
+                      shadows: const [
+                        Shadow(color: Colors.black, blurRadius: 6),
+                      ],
                     ),
                   ),
                 ],
@@ -110,11 +107,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                 child: Container(
                   color: Colors.black.withOpacity(0.35),
                   child: const Center(
-                    child: Icon(
-                      Icons.lock,
-                      color: Colors.white70,
-                      size: 50,
-                    ),
+                    child: Icon(Icons.lock, color: Colors.white70, size: 50),
                   ),
                 ),
               ),
@@ -126,7 +119,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
               bottom: 0,
               child: InkWell(
                 onTap: () {
-                   Navigator.push(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ZoneDetailsScreen(zone: zone),
