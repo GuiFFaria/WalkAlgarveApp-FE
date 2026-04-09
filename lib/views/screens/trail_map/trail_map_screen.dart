@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/poi_info_popup/poi_info_popup.dart';
 import 'package:walk_algarve_app/views/helpers/debug_helper.dart';
@@ -21,14 +25,23 @@ class TrailMapScreen extends StatefulWidget {
 class _TrailMapScreenState extends State<TrailMapScreen> {
   final MapController _mapController = MapController();
 
-  int _currentPoiIndex = 0;
-  bool _trailStarted = true;
+  final int _currentPoiIndex = 0;
+  bool _trailStarted = false;
 
   StreamSubscription<Position>? _positionStream;
   LatLng? _userLocation;
+  LatLng? _lastKnownPosition;
 
   dynamic _activePoi;
   bool _poiPopupVisible = false;
+
+  // Progress tracking
+  DateTime? _trailStartedAt;
+  double _distanceCoveredKm = 0;
+  final Set<int> _visitedPoiIds = {};
+  int? _activeHistoryId;
+  Timer? _elapsedTimer;
+  Duration _elapsed = Duration.zero;
 
   @override
   void initState() {
@@ -42,31 +55,15 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       DebugLogger.error("TrailMap", "Sort POIs", e);
     }
 
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _setDebugLocationNearPoiA(),
-    );
-
     _showStartPopup();
   }
 
   @override
   void dispose() {
     _positionStream?.cancel();
+    _elapsedTimer?.cancel();
     DebugLogger.info("TrailMap", "Location stream cancelado");
     super.dispose();
-  }
-
-  // DEBUG: hardcoded location near POI A to test popup
-  void _setDebugLocationNearPoiA() {
-    final pois = extractPois(widget.trail);
-    if (pois.isEmpty) return;
-    final c = pois[0]['geometry']['coordinates'];
-    // offset ~10m north so it's within the 25m activation radius
-    setState(() {
-      _userLocation = LatLng(c[1] + 0.00009, c[0]);
-      _activePoi = pois[0];
-      _poiPopupVisible = true;
-    });
   }
 
   void _showStartPopup() {
@@ -76,9 +73,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
         context: context,
         barrierDismissible: false,
         builder: (_) => Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -86,16 +81,10 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
               children: [
                 Text(
                   translations.start_trail_title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  translations.start_trail_body,
-                  textAlign: TextAlign.center,
-                ),
+                Text(translations.start_trail_body, textAlign: TextAlign.center),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -122,10 +111,53 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   }
 
   Future<void> _startTrail() async {
-    _trailStarted = true;
+    setState(() {
+      _trailStarted = true;
+      _trailStartedAt = DateTime.now();
+    });
+
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_trailStartedAt != null) {
+        setState(() => _elapsed = DateTime.now().difference(_trailStartedAt!));
+      }
+    });
+
+    await _postHistoryStart();
     await _enableLocationTracking();
+
     if (_userLocation != null) {
       _mapController.move(_userLocation!, 17);
+    }
+  }
+
+  Future<void> _postHistoryStart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      final userJson = prefs.getString('user');
+      if (token == null || userJson == null) return;
+
+      final userId = jsonDecode(userJson)['id'];
+      final trailId = widget.trail['properties']?['id'];
+      if (userId == null || trailId == null) return;
+
+      final baseUrl = dotenv.env['API_BASE_URL']!;
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/$userId/history/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'user': userId, 'trail': trailId}),
+      );
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        setState(() => _activeHistoryId = data['id']);
+        DebugLogger.info("TrailMap", "History criado: $_activeHistoryId");
+      }
+    } catch (e) {
+      DebugLogger.error("TrailMap", "Erro ao criar history", e);
     }
   }
 
@@ -146,31 +178,182 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       final pois = extractPois(widget.trail);
       if (pois.isEmpty) return;
 
-      // DEBUG: real-time location tracking disabled while testing hardcoded location
-      // _positionStream = Geolocator.getPositionStream().listen((Position pos) {
-      //   final user = LatLng(pos.latitude, pos.longitude);
-      //   setState(() => _userLocation = user);
-      //   for (final poi in pois) {
-      //     if (isUserNearPoi(user, poi)) {
-      //       if (_activePoi != poi) {
-      //         setState(() {
-      //           _activePoi = poi;
-      //           _poiPopupVisible = true;
-      //         });
-      //       }
-      //       return;
-      //     }
-      //   }
-      //   if (_poiPopupVisible) {
-      //     setState(() {
-      //       _poiPopupVisible = false;
-      //       _activePoi = null;
-      //     });
-      //   }
-      // });
+      _positionStream = Geolocator.getPositionStream().listen((Position pos) {
+        final user = LatLng(pos.latitude, pos.longitude);
+
+        if (_lastKnownPosition != null) {
+          final meters = Geolocator.distanceBetween(
+            _lastKnownPosition!.latitude,
+            _lastKnownPosition!.longitude,
+            user.latitude,
+            user.longitude,
+          );
+          setState(() => _distanceCoveredKm += meters / 1000);
+        }
+
+        setState(() {
+          _userLocation = user;
+          _lastKnownPosition = user;
+        });
+
+        for (final poi in pois) {
+          if (isUserNearPoi(user, poi)) {
+            final poiId = poi['properties']?['id'];
+            if (poiId != null) _visitedPoiIds.add(poiId);
+
+            if (_activePoi != poi) {
+              setState(() {
+                _activePoi = poi;
+                _poiPopupVisible = true;
+              });
+            }
+            return;
+          }
+        }
+
+        if (_poiPopupVisible) {
+          setState(() {
+            _poiPopupVisible = false;
+            _activePoi = null;
+          });
+        }
+      });
     } catch (e) {
       DebugLogger.error("TrailMap", "Erro no tracking", e);
     }
+  }
+
+  void _showFinishDialog() {
+    final translations = AppLocalizations.of(context)!;
+    int selectedRating = 0;
+    final notesController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  translations.finish_trail_title,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(translations.finish_trail_body),
+                const SizedBox(height: 20),
+                Text(
+                  translations.finish_trail_rating,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    final star = i + 1;
+                    return IconButton(
+                      icon: Icon(
+                        star <= selectedRating ? Icons.star : Icons.star_border,
+                        color: const Color(0xFFF4A261),
+                        size: 32,
+                      ),
+                      onPressed: () => setDialogState(() => selectedRating = star),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: notesController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: translations.finish_trail_notes_hint,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(translations.back),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await _finishTrail(
+                          rating: selectedRating > 0 ? selectedRating : null,
+                          notes: notesController.text.trim(),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1BA6A1),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(translations.finish),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _finishTrail({int? rating, String notes = ''}) async {
+    await _positionStream?.cancel();
+    _elapsedTimer?.cancel();
+
+    final endedAt = DateTime.now();
+    final durationMin = _trailStartedAt != null
+        ? endedAt.difference(_trailStartedAt!).inMinutes
+        : null;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      final userJson = prefs.getString('user');
+      if (token == null || userJson == null) {
+        if (mounted) Navigator.pop(context);
+        return;
+      }
+
+      final userId = jsonDecode(userJson)['id'];
+      final baseUrl = dotenv.env['API_BASE_URL']!;
+
+      if (_activeHistoryId != null) {
+        await http.patch(
+          Uri.parse('$baseUrl/users/$userId/history/$_activeHistoryId/'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'ended_at': endedAt.toIso8601String(),
+            'duration_actual_min': durationMin,
+            'distance_actual_km': double.parse(_distanceCoveredKm.toStringAsFixed(3)),
+            'pois_visited': _visitedPoiIds.toList(),
+            'completed': true,
+            if (rating != null) 'rating': rating,
+            if (notes.isNotEmpty) 'notes': notes,
+          }),
+        );
+        DebugLogger.info("TrailMap", "History $_activeHistoryId terminado");
+      }
+    } catch (e) {
+      DebugLogger.error("TrailMap", "Erro ao terminar trail", e);
+    }
+
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -186,6 +369,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
         children: [
           _buildMap(path, pois, visiblePois),
           _buildHeader(widget.trail),
+          if (_trailStarted) _buildFinishButton(),
           _buildPoiPopup(),
         ],
       ),
@@ -200,9 +384,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
         options: MapOptions(
           initialCenter: path.isNotEmpty ? path.first : const LatLng(0, 0),
           initialZoom: 17,
-          interactionOptions: const InteractionOptions(
-            flags: InteractiveFlag.all,
-          ),
+          interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
         ),
         children: [
           TileLayer(
@@ -211,11 +393,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
           ),
           PolylineLayer(
             polylines: [
-              Polyline(
-                points: path,
-                strokeWidth: 5,
-                color: const Color(0xFF4A90E2),
-              ),
+              Polyline(points: path, strokeWidth: 5, color: const Color(0xFF4A90E2)),
             ],
           ),
           MarkerLayer(
@@ -234,8 +412,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       final poi = pois[i];
       final c = poi['geometry']['coordinates'];
       final point = LatLng(c[1], c[0]);
-      final clickable =
-          _userLocation != null && isUserNearPoi(_userLocation!, poi);
+      final clickable = _userLocation != null && isUserNearPoi(_userLocation!, poi);
 
       return Marker(
         point: point,
@@ -244,9 +421,9 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
         child: GestureDetector(
           onTap: clickable
               ? () => setState(() {
-                  _activePoi = poi;
-                  _poiPopupVisible = true;
-                })
+                    _activePoi = poi;
+                    _poiPopupVisible = true;
+                  })
               : null,
           child: _poiMarker(poiLetter(i), clickable),
         ),
@@ -292,6 +469,27 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
     );
   }
 
+  Widget _buildFinishButton() {
+    final translations = AppLocalizations.of(context)!;
+    return Positioned(
+      bottom: 32,
+      left: 24,
+      right: 24,
+      child: ElevatedButton.icon(
+        onPressed: _showFinishDialog,
+        icon: const Icon(Icons.flag_rounded),
+        label: Text(translations.finish_trail_button),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF1BA6A1),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
   Widget _poiMarker(String text, bool active) {
     return Container(
       decoration: BoxDecoration(
@@ -301,16 +499,22 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       child: Center(
         child: Text(
           text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
+  String _formatElapsed(Duration d) {
+    final h = d.inHours.toString().padLeft(2, '0');
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return d.inHours > 0 ? '$h:$m:$s' : '$m:$s';
+  }
+
   Widget _buildHeader(dynamic trail) {
+    final totalKm = (trail['properties']['distance_km'] as num?)?.toDouble() ?? 0;
+
     return Positioned(
       top: 0,
       left: 0,
@@ -318,69 +522,127 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       child: SafeArea(
         bottom: false,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(8, 10, 8, 14),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(24),
-            ),
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.12),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
+          child: _trailStarted ? _buildProgressCard(totalKm) : _buildTrailInfo(trail),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrailInfo(dynamic trail) {
+    return Column(
+      children: [
+        Text(
+          trail['properties']['name'],
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 16,
+          runSpacing: 8,
+          children: [
+            _buildInfoChip(Icons.route, "${trail['properties']['distance_km']} km"),
+            _buildInfoChip(Icons.timer, trail['properties']['duration_min'].toString()),
+            _buildInfoChip(Icons.refresh, trail['properties']['trail_type']),
+            _buildInfoChip(Icons.flag, trail['properties']['difficulty']),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressCard(double totalKm) {
+    final progress = totalKm > 0 ? (_distanceCoveredKm / totalKm).clamp(0.0, 1.0) : 0.0;
+
+    return Row(
+      children: [
+        Expanded(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'CURRENT PROGRESS',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade500,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 4),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      trail['properties']['name'],
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Text(
+                    '${_distanceCoveredKm.toStringAsFixed(1)}km',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1BA6A1),
                     ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'of ${totalKm.toStringAsFixed(1)}km',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 16,
-                runSpacing: 8,
-                children: [
-                  _buildInfoChip(
-                    Icons.route,
-                    "${trail['properties']['distance_km']} km",
-                  ),
-                  _buildInfoChip(
-                    Icons.timer,
-                    trail['properties']['duration_min'].toString(),
-                  ),
-                  _buildInfoChip(
-                    Icons.refresh,
-                    trail['properties']['trail_type'],
-                  ),
-                  _buildInfoChip(Icons.flag, trail['properties']['difficulty']),
-                ],
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1BA6A1)),
+                ),
               ),
             ],
           ),
         ),
-      ),
+        const SizedBox(width: 24),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              'TIME ELAPSED',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade500,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _formatElapsed(_elapsed),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4A90E2),
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

@@ -481,6 +481,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed from favorites (offline)'**
   String get favorite_removed_offline;
+
+  /// No description provided for @finish_trail_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish Trail'**
+  String get finish_trail_button;
+
+  /// No description provided for @finish_trail_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish Trail?'**
+  String get finish_trail_title;
+
+  /// No description provided for @finish_trail_body.
+  ///
+  /// In en, this message translates to:
+  /// **'You are about to finish this trail. How was your experience?'**
+  String get finish_trail_body;
+
+  /// No description provided for @finish_trail_rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate this trail'**
+  String get finish_trail_rating;
+
+  /// No description provided for @finish_trail_notes_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a note (optional)...'**
+  String get finish_trail_notes_hint;
+
+  /// No description provided for @finish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get finish;
 }
 
 class _AppLocalizationsDelegate

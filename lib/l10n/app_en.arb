@@ -70,5 +70,12 @@
   "favorite_added": "Added to favorites",
   "favorite_removed": "Removed from favorites",
   "favorite_added_offline": "Saved as favorite (offline)",
-  "favorite_removed_offline": "Removed from favorites (offline)"
+  "favorite_removed_offline": "Removed from favorites (offline)",
+
+  "finish_trail_button": "Finish Trail",
+  "finish_trail_title": "Finish Trail?",
+  "finish_trail_body": "You are about to finish this trail. How was your experience?",
+  "finish_trail_rating": "Rate this trail",
+  "finish_trail_notes_hint": "Leave a note (optional)...",
+  "finish": "Finish"
 }

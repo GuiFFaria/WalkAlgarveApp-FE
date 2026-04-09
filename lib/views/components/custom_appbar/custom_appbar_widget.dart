@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 
@@ -25,6 +26,10 @@ class CustomAppBarWidget extends StatelessWidget implements PreferredSizeWidget 
 
     return AppBar(
       backgroundColor: const Color(0xFF1BA6A1),
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFF1BA6A1),
+        statusBarIconBrightness: Brightness.light,
+      ),
       elevation: 2,
       centerTitle: true,
       title: Text(
