@@ -14,3 +14,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Backend
+
+This app talks to the [WalkAlgarveApp-BE](https://github.com/GuiFFaria/WalkAlgarveApp-BE) Django API, which now lives in its own repo. Create a `.env` file at the project root (see `.env.example`) pointing `API_BASE_URL` at your running backend instance.
