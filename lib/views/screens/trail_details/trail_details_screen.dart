@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
 import 'package:walk_algarve_app/views/screens/trail_map/trail_map_screen.dart';
@@ -39,10 +40,10 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
 
     debugPrint("📘 Descrição traduzida: $is_bike_friendly");
 
-    final thumbnail =
-        trail["properties"]?["thumbnail_url"]?.toString() ??
-        trail["image"]?.toString() ??
-        "https://picsum.photos/800/600";
+    // The API sends an empty address for a trail without a photo.
+    final thumbnail = [trail["properties"]?["thumbnail_url"], trail["image"]]
+        .map((url) => url?.toString() ?? "")
+        .firstWhere((url) => url.isNotEmpty, orElse: () => "");
 
     final distance = trail["properties"]["distance_km"]?.toString() ?? "—";
     final duration = trail["properties"]["duration_min"]?.toString() ?? "—";
@@ -64,7 +65,14 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
             child: SizedBox(
               height: 320,
               width: double.infinity,
-              child: Image.network(thumbnail, fit: BoxFit.cover),
+              child: thumbnail.isEmpty
+                  ? const PhotoPlaceholderWidget(dimmed: true)
+                  : Image.network(
+                      thumbnail,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const PhotoPlaceholderWidget(dimmed: true),
+                    ),
             ),
           ),
 

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
@@ -193,24 +194,21 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              CachedNetworkImage(
-                imageUrl: imageUrl.isNotEmpty
-                    ? imageUrl
-                    : "https://via.placeholder.com/400x200.png?text=No+Image",
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey.shade300,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Image.asset(
-                  "assets/default.jpg",
+              if (imageUrl.isEmpty)
+                const PhotoPlaceholderWidget(dimmed: true)
+              else
+                CachedNetworkImage(
+                  imageUrl: imageUrl,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey.shade300,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) =>
+                      const PhotoPlaceholderWidget(dimmed: true),
                 ),
-              ),
 
               Positioned.fill(
                 child: Container(

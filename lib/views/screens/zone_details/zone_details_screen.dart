@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/screens/trails_list/trails_list_screen.dart';
 
@@ -51,12 +52,10 @@ class ZoneDetailsScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    errorBuilder: (_, __, ___) => Image.asset(
-                      "assets/default.jpg",
-                      fit: BoxFit.cover,
-                    ),
+                    errorBuilder: (_, __, ___) =>
+                        const PhotoPlaceholderWidget(),
                   )
-                : Image.asset("assets/default.jpg", fit: BoxFit.cover),
+                : const PhotoPlaceholderWidget(),
           ),
 
           Expanded(
