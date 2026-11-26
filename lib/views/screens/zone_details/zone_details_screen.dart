@@ -22,12 +22,13 @@ class ZoneDetailsScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: 320, child: _buildPhoto(context)),
-                Padding(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 320, child: _buildPhoto(context)),
+              // Only the text scrolls, so it never runs under the status bar.
+              Expanded(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,8 +58,8 @@ class ZoneDetailsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           SafeArea(
             child: Padding(
@@ -110,7 +111,7 @@ class ZoneDetailsScreen extends StatelessWidget {
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => TrailsListScreen(zoneId: zone["id"]),
+            builder: (_) => TrailsListScreen(zone: zone),
           ),
         ),
         child: Text(translations.viewTrails),

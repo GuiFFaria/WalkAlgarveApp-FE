@@ -15,7 +15,8 @@ Displays all trails belonging to a specific zone:
 - Handles both plain JSON list and GeoJSON `features` array response formats
 - Syncs pending favorite toggles (queued while offline) when back online
 - Pull-to-refresh support
-- Offline fallback with cached data
+- Offline fallback with cached data and an offline banner
+- Header with a back button, the zone's name and the language switch
 
 ---
 
@@ -23,9 +24,10 @@ Displays all trails belonging to a specific zone:
 
 Each trail is displayed as a card with:
 
-- Cached network image with dark gradient overlay
-- Trail name, distance (km), duration (hours), type, and difficulty
-- **Heart icon** for favoriting:
+- Cached network image, or a placeholder
+- Trail name, distance (km), duration (hours), type, and difficulty. Missing facts are
+  left out; the difficulties Easy, Moderate and Hard are translated
+- **Heart button** for favoriting:
   - Toggles immediately in the UI (optimistic update)
   - If online: calls `POST /trails/` with Bearer token
   - If offline: queues the action in `pending_favorites` (SharedPreferences) for later sync
@@ -36,9 +38,7 @@ Each trail is displayed as a card with:
 
 Full-screen detail view for a selected trail:
 
-- Large header image (320px height)
-- Overlapping white card starting at 280px with scrollable description
-- Info row with icons for: distance, duration, trail type, difficulty, bike-friendly status
-- Localized description (PT/EN)
-- **Map button** (circular overlay on image) → opens Trail Map Screen
-- **Back button** (top-left overlay)
+- Photo (300px) with a back button over it
+- Scrolling panel with the name, four fact tiles (distance, duration, type, difficulty),
+  a bike label (hidden when unknown) and the localized description
+- **"View map" button** fixed at the bottom → opens Trail Map Screen

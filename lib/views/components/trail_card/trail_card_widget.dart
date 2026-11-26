@@ -6,20 +6,20 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/components/info_chip/info_chip_widget.dart';
 import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
+import 'package:walk_algarve_app/views/helpers/trail_helper.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
 import 'package:walk_algarve_app/views/screens/trail_details/trail_details_screen.dart';
 
 class TrailCardWidget extends StatefulWidget {
   final Map<String, dynamic> trail;
-  final int index;
   final VoidCallback? onFavoriteToggled;
 
   const TrailCardWidget(
-    this.trail,
-    this.index, {
+    this.trail, {
     super.key,
     this.onFavoriteToggled,
   });
@@ -162,6 +162,8 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     final translations = AppLocalizations.of(context)!;
     final trail = widget.trail;
     final locale = context.watch<LocaleProvider>().locale.languageCode;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     final title = TranslationHelper.getValue(
       trail,
@@ -169,124 +171,94 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       "name",
       fallback: translations.untitled_trail,
     );
+    final photo = TrailHelper.photo(trail);
+    final placeholder =
+        PhotoPlaceholderWidget(caption: translations.trail_photo);
+    final difficulty = TrailHelper.difficulty(trail, translations);
+    final facts = [
+      TrailHelper.distance(trail, locale),
+      TrailHelper.duration(trail, locale),
+      TrailHelper.type(trail),
+    ].nonNulls;
 
-    final imageUrl = trail["properties"]?["thumbnail_url"]?.toString() ?? "";
-    final distance = trail["properties"]?["distance_km"]?.toString() ?? "-";
-    final duration = trail["properties"]?["duration_min"]?.toString() ?? "-";
-    final type =
-        trail["properties"]?["trail_type"]?.toString().toLowerCase() ?? "-";
-    final difficulty = trail["properties"]?["difficulty"]?.toString() ?? "-";
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TrailDetailsScreen(trail: trail),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        height: 200,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Stack(
-            children: [
-              if (imageUrl.isEmpty)
-                const PhotoPlaceholderWidget(dimmed: true)
-              else
-                CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey.shade300,
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-                  errorWidget: (context, url, error) =>
-                      const PhotoPlaceholderWidget(dimmed: true),
-                ),
-
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.center,
-                      colors: [
-                        Colors.black.withOpacity(0.6),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Stack(
+        children: [
+          InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TrailDetailsScreen(trail: trail),
               ),
-
-              Positioned(
-                top: 12,
-                right: 12,
-                child: GestureDetector(
-                  onTap: _toggleFavorite,
-                  child: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : Colors.white,
-                    size: 28,
-                  ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 220,
+                  child: photo.isEmpty
+                      ? placeholder
+                      : CachedNetworkImage(
+                          imageUrl: photo,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) =>
+                              const Center(child: CircularProgressIndicator()),
+                          errorWidget: (_, __, ___) => placeholder,
+                        ),
                 ),
-              ),
-
-              Positioned(
-                left: 16,
-                bottom: 16,
-                right: 16,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        shadows: [Shadow(color: Colors.black, blurRadius: 6)],
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleLarge),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final fact in facts)
+                            InfoChipWidget(
+                              label: fact,
+                              background: colors.surfaceContainerHighest,
+                              foreground: colors.onSurface,
+                            ),
+                          if (difficulty != null)
+                            InfoChipWidget(
+                              label: difficulty,
+                              background: colors.primaryContainer,
+                              foreground: colors.onPrimaryContainer,
+                            ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        _info(Icons.place, distance, suffix: " km"),
-                        _info(Icons.timer, duration, suffix: " h"),
-                        _info(Icons.loop, type),
-                        _info(Icons.flag, difficulty),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          Positioned(
+            top: 12,
+            right: 12,
+            child: IconButton(
+              tooltip: isFavorite
+                  ? translations.favorite_remove
+                  : translations.favorite_add,
+              onPressed: _toggleFavorite,
+              icon: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: colors.surface,
+                foregroundColor: isFavorite ? colors.error : colors.onSurface,
+                fixedSize: const Size(44, 44),
+              ),
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _info(IconData icon, String text, {String suffix = ""}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.white, size: 13),
-        const SizedBox(width: 3),
-        Text(
-          text == "-" ? text : "$text$suffix",
-          style: const TextStyle(color: Colors.white, fontSize: 15),
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
     );
   }
 }

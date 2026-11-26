@@ -27,7 +27,7 @@ cover the bar.
 
 ## Trail Card (`trail_card_widget.dart`)
 
-Used in the trails list. Shows image, name, metadata, and a heart button with offline queueing.
+Used in the trails list. Shows photo, name, fact labels, and a heart button with offline queueing.
 
 ---
 
@@ -47,6 +47,7 @@ Used in the zones list. Shows photo, name, municipality and locked/unlocked labe
 | `square_icon_button_widget.dart` | Back and filter buttons |
 | `empty_state_widget.dart` | Empty list |
 | `language_switch_widget.dart` | PT/EN flags in headers |
+| `screen_header_widget.dart` | Large screen title with controls |
 
 ---
 
