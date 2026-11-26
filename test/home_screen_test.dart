@@ -196,6 +196,23 @@ void main() {
             )));
   });
 
+  testWidgets('every tab fits a small screen with large text',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await openApp(tester);
+
+    for (final label in [pt.favorites, pt.history, pt.profile, pt.explore]) {
+      await tester.tap(tab(label));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: label);
+    }
+  });
+
   for (final (name, theme) in [
     ('light', AppTheme.light),
     ('dark', AppTheme.dark),

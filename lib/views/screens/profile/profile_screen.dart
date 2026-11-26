@@ -130,11 +130,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _ProfileStat(label: translations.favorites, value: "12"),
-                      _ProfileStat(label: translations.completed, value: "8"),
-                      _ProfileStat(label: translations.zones, value: "3"),
+                      for (final (label, value) in [
+                        (translations.favorites, "12"),
+                        (translations.completed, "8"),
+                        (translations.zones, "3"),
+                      ])
+                        Expanded(
+                          child: _ProfileStat(label: label, value: value),
+                        ),
                     ],
                   ),
                 ),
@@ -212,7 +217,16 @@ class _ProfileStat extends StatelessWidget {
       children: [
         Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ),
+        ),
       ],
     );
   }
