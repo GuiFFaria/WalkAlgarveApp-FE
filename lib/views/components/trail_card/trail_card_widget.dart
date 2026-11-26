@@ -123,7 +123,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
       final headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        if (token != null && token.isNotEmpty) "Authorization": "Bearer $token",
+        if (token.isNotEmpty) "Authorization": "Bearer $token",
       };
 
       final response = await http.post(

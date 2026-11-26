@@ -197,7 +197,7 @@ class _ProfileStat extends StatelessWidget {
   final String label;
   final String value;
 
-  const _ProfileStat({required this.label, required this.value, super.key});
+  const _ProfileStat({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +216,7 @@ class _ProfileOption extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _ProfileOption({required this.icon, required this.label, required this.onTap, super.key});
+  const _ProfileOption({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
