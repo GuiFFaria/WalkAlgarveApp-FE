@@ -102,6 +102,11 @@ class AppTheme {
           borderSide: BorderSide(color: color, width: width),
         );
 
+    Color tabColor(Set<WidgetState> states) =>
+        states.contains(WidgetState.selected)
+            ? scheme.primary
+            : scheme.onSurfaceVariant;
+
     return base.copyWith(
       scaffoldBackgroundColor: background,
       textTheme: text,
@@ -172,6 +177,19 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: scheme.outlineVariant),
+      navigationBarTheme: NavigationBarThemeData(
+        height: 64,
+        elevation: 0,
+        backgroundColor: scheme.surface,
+        indicatorColor: scheme.primaryContainer,
+        indicatorShape: const StadiumBorder(),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(color: tabColor(states)),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => _style(11, FontWeight.w700, 1.35, tabColor(states)),
+        ),
+      ),
     );
   }
 

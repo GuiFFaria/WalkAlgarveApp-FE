@@ -4,31 +4,24 @@
 
 ## Custom AppBar (`custom_appbar_widget.dart`)
 
-- Teal background (`#1BA6A1`)
+- Colors from the theme (`app_theme.dart`)
 - Centered title
-- Left: hamburger icon to open drawer
+- Left: back button on screens opened above another screen
 - Right: PT/EN language toggle flags
 
 ---
 
-## Custom Drawer (`custom_drawer_widget.dart`)
+## Bottom Tab Bar (`app_tab_bar_widget.dart`)
 
-Side navigation drawer with:
+Shown by `home_screen.dart`, the screen opened after login. Screens opened from a tab
+cover the bar.
 
-**Header:**
-- User avatar, username, welcome message
-- Gradient teal background
-
-**Navigation Sections:**
-
-| Section | Items |
+| Tab | Screen |
 |---|---|
-| Explore | Zones, History |
-| Account | Profile, Favorites |
-| Settings | Settings |
-
-**Footer:**
-- App version (v1.0.0) + hiking icon
+| Explore | Zones list |
+| Favorites | "Coming soon" |
+| History | "Coming soon" |
+| Profile | Profile, with an entry to Settings ("Coming soon") |
 
 ---
 

@@ -34,7 +34,7 @@ When a user completes a trail (reaches the end point on the map), the app record
 **What to implement:**
 - Detect when the user is within X meters of the trail endpoint → show a "You completed this trail!" dialog
 - Store completions locally (`completed_trails` in SharedPreferences) and sync to the backend
-- Show completed trails in a dedicated History screen (already in the drawer but not implemented)
+- Show completed trails in a dedicated History screen (the History tab shows "Coming soon")
 - Display real stats on the Profile screen: total trails completed, total km walked, total time
 
 **Backend needed:** `POST /trails/{id}/complete/`, `GET /user/history/`
@@ -205,7 +205,7 @@ Reward users with badges for reaching milestones.
 | Naturalist | Visit 20 different POIs |
 
 **What to implement:**
-- Achievements screen accessible from the Profile or Drawer
+- Achievements screen accessible from the Profile
 - Badge grid with locked/unlocked state
 - Unlock animation when a badge is earned
 - Progress indicators for partially completed achievements

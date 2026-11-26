@@ -4,12 +4,10 @@ import 'package:walk_algarve_app/views/context/locale_provider.dart';
 
 class CustomAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final VoidCallback? onMenuPressed;
 
   const CustomAppBarWidget({
     Key? key,
     required this.title,
-    this.onMenuPressed,
   }) : super(key: key);
 
   @override
@@ -26,14 +24,6 @@ class CustomAppBarWidget extends StatelessWidget implements PreferredSizeWidget 
     return AppBar(
       centerTitle: true,
       title: Text(title),
-      leading: Builder(
-        builder: (innerContext) {
-          return IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: onMenuPressed ?? () => Scaffold.of(innerContext).openDrawer(),
-          );
-        },
-      ),
       actions: [
         GestureDetector(
           onTap: () => context.read<LocaleProvider>().toggleLocale(),

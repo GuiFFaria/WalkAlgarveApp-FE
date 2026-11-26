@@ -11,5 +11,6 @@ These features are visible in the UI or referenced in code but not yet fully imp
 | Trail history | `profile_screen.dart` | Menu item present, no action |
 | Upload profile photo | `profile_screen.dart` | Local picker works, no backend upload |
 | User statistics | `profile_screen.dart` | Hardcoded values (12 favorites, 8 completed, 3 zones) |
-| Favorites screen | `custom_drawer_widget.dart` | Drawer item exists, no screen |
-| Settings screen | `settings_screen.dart` | Returns empty `Container` |
+| Favorites screen | `home_screen.dart` | Tab shows "Coming soon" |
+| History screen | `home_screen.dart` | Tab shows "Coming soon" |
+| Settings screen | `settings_screen.dart` | Shows "Coming soon" |
