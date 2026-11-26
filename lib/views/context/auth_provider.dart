@@ -96,44 +96,41 @@ class AuthProvider extends ChangeNotifier {
 
   /// 🔹 Atualiza o access token usando o refresh token
   Future<void> _refreshAccessToken() async {
-    if (_refreshToken == null || _refreshToken!.isEmpty) {
-      print("❌ No refresh token available. User must log in again.");
-      await logout();
-      return;
-    }
+    if (!await tryRefreshAccessToken()) await logout();
+  }
 
-    final baseUrl = dotenv.env['API_BASE_URL']!;
-    final url = Uri.parse("$baseUrl/auth/token/refresh/");
-    print("🔄 Attempting token refresh at: $url");
+  /// Renews the access token without signing out on failure, for callers that
+  /// must not interrupt the user, such as a walk in progress.
+  Future<bool> tryRefreshAccessToken() async {
+    // Login writes the refresh token straight to storage, so read it from there.
+    final prefs = await SharedPreferences.getInstance();
+    final refresh = prefs.getString('refresh_token');
+    if (refresh == null || refresh.isEmpty) return false;
+
+    final url = Uri.parse("${dotenv.env['API_BASE_URL']!}/auth/token/refresh/");
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refresh': _refreshToken}),
-      );
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refresh': refresh}),
+          )
+          .timeout(const Duration(seconds: 15));
 
-      print("📡 Refresh response status: ${response.statusCode}");
-      print("📦 Refresh response body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final newAccessToken = data['access'];
-
-        if (newAccessToken != null && newAccessToken.isNotEmpty) {
-          print("✅ Token successfully refreshed.");
-          await setToken(newAccessToken);
-        } else {
-          print("⚠️ No access token in refresh response.");
-          await logout();
-        }
-      } else {
-        print("❌ Failed to refresh token: ${response.body}");
-        await logout();
+      if (response.statusCode != 200) {
+        print("❌ Failed to refresh token: ${response.statusCode}");
+        return false;
       }
+
+      final access = jsonDecode(response.body)['access'];
+      if (access is! String || access.isEmpty) return false;
+
+      await setToken(access, refreshToken: refresh);
+      return true;
     } catch (e) {
       print("❌ Exception while refreshing token: $e");
-      await logout();
+      return false;
     }
   }
 }

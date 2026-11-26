@@ -1,16 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/poi_info_popup/poi_info_popup.dart';
+import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/helpers/debug_helper.dart';
+import 'trail_history.dart';
 import 'trail_map_screen.functions.dart';
 
 class TrailMapScreen extends StatefulWidget {
@@ -39,7 +38,9 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
   DateTime? _trailStartedAt;
   double _distanceCoveredKm = 0;
   final Set<int> _visitedPoiIds = {};
-  int? _activeHistoryId;
+  late final TrailHistory _history = TrailHistory(
+    refreshToken: context.read<AuthProvider>().tryRefreshAccessToken,
+  );
   Timer? _elapsedTimer;
   Duration _elapsed = Duration.zero;
 
@@ -122,42 +123,11 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
       }
     });
 
-    await _postHistoryStart();
+    _history.start(widget.trail['id']);
     await _enableLocationTracking();
 
     if (_userLocation != null) {
       _mapController.move(_userLocation!, 17);
-    }
-  }
-
-  Future<void> _postHistoryStart() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      final userJson = prefs.getString('user');
-      if (token == null || userJson == null) return;
-
-      final userId = jsonDecode(userJson)['id'];
-      final trailId = widget.trail['properties']?['id'];
-      if (userId == null || trailId == null) return;
-
-      final baseUrl = dotenv.env['API_BASE_URL']!;
-      final response = await http.post(
-        Uri.parse('$baseUrl/users/$userId/history/'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'user': userId, 'trail': trailId}),
-      );
-
-      if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        setState(() => _activeHistoryId = data['id']);
-        DebugLogger.info("TrailMap", "History criado: $_activeHistoryId");
-      }
-    } catch (e) {
-      DebugLogger.error("TrailMap", "Erro ao criar history", e);
     }
   }
 
@@ -198,7 +168,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
 
         for (final poi in pois) {
           if (isUserNearPoi(user, poi)) {
-            final poiId = poi['properties']?['id'];
+            final poiId = poi['id'];
             if (poiId != null) _visitedPoiIds.add(poiId);
 
             if (_activePoi != poi) {
@@ -318,40 +288,14 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
         ? endedAt.difference(_trailStartedAt!).inMinutes
         : null;
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      final userJson = prefs.getString('user');
-      if (token == null || userJson == null) {
-        if (mounted) Navigator.pop(context);
-        return;
-      }
-
-      final userId = jsonDecode(userJson)['id'];
-      final baseUrl = dotenv.env['API_BASE_URL']!;
-
-      if (_activeHistoryId != null) {
-        await http.patch(
-          Uri.parse('$baseUrl/users/$userId/history/$_activeHistoryId/'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
-            'ended_at': endedAt.toIso8601String(),
-            'duration_actual_min': durationMin,
-            'distance_actual_km': double.parse(_distanceCoveredKm.toStringAsFixed(3)),
-            'pois_visited': _visitedPoiIds.toList(),
-            'completed': true,
-            if (rating != null) 'rating': rating,
-            if (notes.isNotEmpty) 'notes': notes,
-          }),
-        );
-        DebugLogger.info("TrailMap", "History $_activeHistoryId terminado");
-      }
-    } catch (e) {
-      DebugLogger.error("TrailMap", "Erro ao terminar trail", e);
-    }
+    await _history.finish(
+      endedAt: endedAt,
+      durationMin: durationMin,
+      distanceKm: _distanceCoveredKm,
+      visitedPoiIds: _visitedPoiIds,
+      rating: rating,
+      notes: notes,
+    );
 
     if (mounted) Navigator.pop(context);
   }
