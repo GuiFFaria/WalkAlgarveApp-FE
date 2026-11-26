@@ -3,140 +3,69 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
+import 'package:walk_algarve_app/views/components/zone_tags/zone_tags_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
+import 'package:walk_algarve_app/views/helpers/zone_helper.dart';
 import 'package:walk_algarve_app/views/screens/zone_details/zone_details_screen.dart';
 
-class ZoneCardWidget extends StatefulWidget {
+class ZoneCardWidget extends StatelessWidget {
   final Map<String, dynamic> zone;
-  final int index;
 
-  const ZoneCardWidget(this.zone, this.index, {super.key});
+  const ZoneCardWidget(this.zone, {super.key});
 
-  @override
-  State<ZoneCardWidget> createState() => _ZoneCardWidgetState();
-}
-
-class _ZoneCardWidgetState extends State<ZoneCardWidget> {
   @override
   Widget build(BuildContext context) {
-    final zone = widget.zone;
     final locale = context.watch<LocaleProvider>().locale.languageCode;
+    final theme = Theme.of(context);
+    final photo = ZoneHelper.photo(zone);
+    final unlocked = ZoneHelper.isUnlocked(zone);
+    final placeholder = PhotoPlaceholderWidget(
+      icon: unlocked ? Icons.image_outlined : Icons.lock_outline,
+      caption: AppLocalizations.of(context)!.zone_photo,
+    );
 
-    final title = locale == "pt"
-        ? (zone['translations']?['pt']?['name']?.toString() ?? '')
-        : (zone['translations']?['en']?['name']?.toString() ?? '');
-    final imageUrl = zone["thumbnail_url"]?.toString() ?? "";
-    final municipalityName = zone["municipality"]?["name"]?.toString() ?? "-";
-    final bool userHasZone = zone["user_have"] == true;
-
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      height: 200,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ZoneDetailsScreen(zone: zone)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 🖼️ Imagem
-            if (imageUrl.isEmpty)
-              const PhotoPlaceholderWidget(dimmed: true)
-            else
-              CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 200,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey.shade300,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) =>
-                    const PhotoPlaceholderWidget(dimmed: true),
-              ),
-
-            // Gradiente
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.center,
-                    colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                  ),
-                ),
-              ),
+            SizedBox(
+              height: unlocked ? 200 : 150,
+              child: photo.isEmpty
+                  ? placeholder
+                  : CachedNetworkImage(
+                      imageUrl: photo,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (_, __, ___) => placeholder,
+                    ),
             ),
-
-            // 📝 Texto
-            Positioned(
-              left: 16,
-              bottom: 40,
-              right: 16,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(color: Colors.black, blurRadius: 6)],
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          ZoneHelper.name(zone, locale),
+                          style: theme.textTheme.titleLarge,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.chevron_right),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    municipalityName,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 16,
-                      shadows: const [
-                        Shadow(color: Colors.black, blurRadius: 6),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 8),
+                  ZoneTagsWidget(zone: zone),
                 ],
-              ),
-            ),
-
-            // 🔒 Ícone de cadeado (se o user não possui a zona)
-            if (!userHasZone)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black.withOpacity(0.35),
-                  child: const Center(
-                    child: Icon(Icons.lock, color: Colors.white70, size: 50),
-                  ),
-                ),
-              ),
-
-            // 📌 Botão "See more"
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ZoneDetailsScreen(zone: zone),
-                    ),
-                  );
-                },
-                child: Container(
-                  height: 40,
-                  color: Colors.black.withOpacity(0.7),
-                  alignment: Alignment.center,
-                  child: Text(
-                    AppLocalizations.of(context)!.seeMore,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
               ),
             ),
           ],

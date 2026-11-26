@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
+import 'package:walk_algarve_app/views/components/square_icon_button/square_icon_button_widget.dart';
+import 'package:walk_algarve_app/views/components/zone_tags/zone_tags_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
+import 'package:walk_algarve_app/views/helpers/zone_helper.dart';
 import 'package:walk_algarve_app/views/screens/trails_list/trails_list_screen.dart';
 
 class ZoneDetailsScreen extends StatelessWidget {
@@ -14,125 +17,119 @@ class ZoneDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final translations = AppLocalizations.of(context)!;
     final locale = context.watch<LocaleProvider>().locale.languageCode;
-
-    final imageUrl = zone["thumbnail_url"] ?? "";
-    final title = locale == "pt"
-        ? (zone['translations']?['pt']?['name']?.toString() ?? '')
-        : (zone['translations']?['en']?['name']?.toString() ?? '');
-    final description = locale == "pt"
-        ? (zone['translations']?['pt']?['description']?.toString() ?? translations.no_description)
-        : (zone['translations']?['en']?['description']?.toString() ?? translations.no_description);
-    final bool userHasZone = zone["user_have"] == true;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        centerTitle: true,
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 180,
-            child: imageUrl.isNotEmpty
-                ? Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(
-                        child: SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Color(0xFF1BA6A1)),
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (_, __, ___) =>
-                        const PhotoPlaceholderWidget(),
-                  )
-                : const PhotoPlaceholderWidget(),
-          ),
-
-          Expanded(
-            child: SingleChildScrollView(
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      translations.aboutZone,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 320, child: _buildPhoto(context)),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ZoneHelper.name(zone, locale),
+                        style: theme.textTheme.headlineMedium,
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      description,
-                      textAlign: TextAlign.left,
-                      style: const TextStyle(fontSize: 16, height: 1.4),
-                    ),
-                    const SizedBox(height: 80),
-                  ],
+                      const SizedBox(height: 14),
+                      ZoneTagsWidget(zone: zone),
+                      const SizedBox(height: 22),
+                      Text(
+                        translations.aboutZone,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        ZoneHelper.description(
+                          zone,
+                          locale,
+                          fallback: translations.no_description,
+                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: SquareIconButtonWidget(
+                icon: Icons.chevron_left,
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => Navigator.maybePop(context),
               ),
             ),
           ),
         ],
       ),
-
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: userHasZone ? Colors.green : Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {
-                if (userHasZone) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TrailsListScreen(zoneId: zone["id"]),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(translations.redirecting_purchase),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
-              child: Text(
-                userHasZone ? translations.viewTrails : translations.unlockZone,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: _buildAction(context),
         ),
       ),
+    );
+  }
+
+  Widget _buildPhoto(BuildContext context) {
+    final photo = ZoneHelper.photo(zone);
+    final placeholder = PhotoPlaceholderWidget(
+      icon: ZoneHelper.isUnlocked(zone)
+          ? Icons.image_outlined
+          : Icons.lock_outline,
+      caption: AppLocalizations.of(context)!.zone_photo,
+    );
+    if (photo.isEmpty) return placeholder;
+
+    return Image.network(
+      photo,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, progress) => progress == null
+          ? child
+          : const Center(child: CircularProgressIndicator()),
+      errorBuilder: (_, __, ___) => placeholder,
+    );
+  }
+
+  Widget _buildAction(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+    final colors = Theme.of(context).colorScheme;
+
+    if (ZoneHelper.isUnlocked(zone)) {
+      return FilledButton(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TrailsListScreen(zoneId: zone["id"]),
+          ),
+        ),
+        child: Text(translations.viewTrails),
+      );
+    }
+
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        backgroundColor: colors.secondary,
+        foregroundColor: colors.onSecondary,
+      ),
+      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(translations.redirecting_purchase),
+          duration: const Duration(seconds: 2),
+        ),
+      ),
+      icon: const Icon(Icons.lock_outline),
+      label: Text(translations.unlockZone),
     );
   }
 }

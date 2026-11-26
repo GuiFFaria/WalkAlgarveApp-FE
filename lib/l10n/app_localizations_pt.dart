@@ -115,7 +115,26 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unlockZone => 'Comprar zona';
 
   @override
-  String get seeMore => 'Ver mais';
+  String get your_zones => 'As suas zonas';
+
+  @override
+  String get other_zones => 'Outras zonas';
+
+  @override
+  String get zone_unlocked => 'Desbloqueada';
+
+  @override
+  String get zone_locked => 'Bloqueada';
+
+  @override
+  String get zone_photo => 'Foto da zona';
+
+  @override
+  String get offline_zones =>
+      'Sem ligação. A mostrar as zonas guardadas neste telemóvel.';
+
+  @override
+  String get welcome => 'Bem-vindo ao Algarve';
 
   @override
   String get no_zones_available => 'Nenhuma zona disponível.';

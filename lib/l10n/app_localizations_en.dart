@@ -113,7 +113,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlockZone => 'Buy Zone';
 
   @override
-  String get seeMore => 'See More';
+  String get your_zones => 'Your zones';
+
+  @override
+  String get other_zones => 'Other zones';
+
+  @override
+  String get zone_unlocked => 'Unlocked';
+
+  @override
+  String get zone_locked => 'Locked';
+
+  @override
+  String get zone_photo => 'Zone photo';
+
+  @override
+  String get offline_zones =>
+      'No connection. Showing zones saved on this phone.';
+
+  @override
+  String get welcome => 'Welcome to Algarve';
 
   @override
   String get no_zones_available => 'No zones available.';

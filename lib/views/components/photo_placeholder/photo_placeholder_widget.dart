@@ -2,28 +2,49 @@ import 'package:flutter/material.dart';
 
 /// Shown where a zone or trail has no photo, or it cannot be loaded.
 class PhotoPlaceholderWidget extends StatelessWidget {
-  /// Darkens the picture so white text drawn over it stays readable.
+  final IconData icon;
+  final String? caption;
+
+  /// A plain dark fill, for places that draw white text over the photo.
   final bool dimmed;
 
-  const PhotoPlaceholderWidget({super.key, this.dimmed = false});
+  const PhotoPlaceholderWidget({
+    super.key,
+    this.icon = Icons.image_outlined,
+    this.caption,
+    this.dimmed = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Shown whole so its caption is not cut off, on its own background color.
-    final picture = ColoredBox(
-      color: const Color(0xFFF2F2F2),
-      child: Image.asset(
-        'assets/images/default.jpg',
-        fit: BoxFit.contain,
-        width: double.infinity,
-        height: double.infinity,
-      ),
-    );
-    if (!dimmed) return picture;
+    if (dimmed) {
+      return const ColoredBox(
+        color: Color(0xFF616161),
+        child: SizedBox.expand(),
+      );
+    }
 
-    return ColorFiltered(
-      colorFilter: const ColorFilter.mode(Color(0x99000000), BlendMode.srcATop),
-      child: picture,
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.onSurfaceVariant;
+
+    return ColoredBox(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: SizedBox.expand(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 40, color: color),
+            if (caption != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                caption!,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

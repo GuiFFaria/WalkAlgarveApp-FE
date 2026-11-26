@@ -33,7 +33,20 @@ Used in the trails list. Shows image, name, metadata, and a heart button with of
 
 ## Zone Card (`zone_card_widget.dart`)
 
-Used in the zones list. Shows image, name, municipality, lock icon, and a "See More" button.
+Used in the zones list. Shows photo, name, municipality and locked/unlocked labels.
+
+---
+
+## Shared pieces of the browsing screens
+
+| Component | Use |
+|---|---|
+| `photo_placeholder_widget.dart` | Missing or failing photo |
+| `offline_banner_widget.dart` | List shown from saved data |
+| `info_chip_widget.dart`, `zone_tags_widget.dart` | Rounded labels |
+| `square_icon_button_widget.dart` | Back and filter buttons |
+| `empty_state_widget.dart` | Empty list |
+| `language_switch_widget.dart` | PT/EN flags in headers |
 
 ---
 
