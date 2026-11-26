@@ -5,8 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar/custom_appbar_widget.dart';
-import 'package:walk_algarve_app/views/components/custom_drawer/custom_drawer_widget.dart';
 import 'package:walk_algarve_app/views/screens/login/login_screen.dart';
+import 'package:walk_algarve_app/views/screens/settings/settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -70,7 +70,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final translations = AppLocalizations.of(context)!;
 
     return Scaffold(
-      drawer: CustomDrawerWidget(),
       appBar: CustomAppBarWidget(title: translations.profile),
 
       body: SingleChildScrollView(
@@ -131,11 +130,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _ProfileStat(label: translations.favorites, value: "12"),
-                      _ProfileStat(label: translations.completed, value: "8"),
-                      _ProfileStat(label: translations.zones, value: "3"),
+                      for (final (label, value) in [
+                        (translations.favorites, "12"),
+                        (translations.completed, "8"),
+                        (translations.zones, "3"),
+                      ])
+                        Expanded(
+                          child: _ProfileStat(label: label, value: value),
+                        ),
                     ],
                   ),
                 ),
@@ -165,6 +169,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: Icons.history,
               label: translations.trail_history_option,
               onTap: () {},
+            ),
+            _ProfileOption(
+              icon: Icons.settings,
+              label: translations.settings,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              ),
             ),
 
             const SizedBox(height: 40),
@@ -205,7 +217,16 @@ class _ProfileStat extends StatelessWidget {
       children: [
         Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ),
+        ),
       ],
     );
   }

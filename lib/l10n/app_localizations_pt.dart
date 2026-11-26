@@ -51,10 +51,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get explore => 'Explorar';
 
   @override
-  String get account_section => 'Conta';
-
-  @override
-  String get close_menu => 'Fechar menu';
+  String get coming_soon => 'Em breve';
 
   @override
   String get login => 'Entrar';
@@ -173,9 +170,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get leave_message => 'Deixa uma mensagem';
-
-  @override
-  String get welcome => 'Bem-vindo ao Algarve';
 
   @override
   String get completed => 'Concluídos';

@@ -182,17 +182,11 @@ abstract class AppLocalizations {
   /// **'Explore'**
   String get explore;
 
-  /// No description provided for @account_section.
+  /// No description provided for @coming_soon.
   ///
   /// In en, this message translates to:
-  /// **'Account'**
-  String get account_section;
-
-  /// No description provided for @close_menu.
-  ///
-  /// In en, this message translates to:
-  /// **'Close menu'**
-  String get close_menu;
+  /// **'Coming soon'**
+  String get coming_soon;
 
   /// No description provided for @login.
   ///
@@ -421,12 +415,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave a message'**
   String get leave_message;
-
-  /// No description provided for @welcome.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to Algarve'**
-  String get welcome;
 
   /// No description provided for @completed.
   ///

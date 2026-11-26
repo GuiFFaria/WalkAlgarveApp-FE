@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar/custom_appbar_widget.dart';
-import 'package:walk_algarve_app/views/components/custom_drawer/custom_drawer_widget.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/trail_card/trail_card_widget.dart';
 
@@ -157,7 +156,6 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: CustomDrawerWidget(),
       appBar: CustomAppBarWidget(
         title: isOffline
             ? "${AppLocalizations.of(context)!.trails} (Offline)"

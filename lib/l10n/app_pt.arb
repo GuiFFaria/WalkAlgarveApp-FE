@@ -14,8 +14,7 @@
   "logout": "Sair",
   "favorites": "Favoritos",
   "explore": "Explorar",
-  "account_section": "Conta",
-  "close_menu": "Fechar menu",
+  "coming_soon": "Em breve",
 
   "login": "Entrar",
   "register": "Registar",
@@ -60,7 +59,6 @@
   "no_info": "Sem informação disponível.",
   "leave_message": "Deixa uma mensagem",
 
-  "welcome": "Bem-vindo ao Algarve",
   "completed": "Concluídos",
   "change_language": "Alterar idioma",
   "change_password": "Alterar palavra-passe",

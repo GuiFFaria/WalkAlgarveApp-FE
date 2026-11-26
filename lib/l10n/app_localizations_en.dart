@@ -51,10 +51,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get explore => 'Explore';
 
   @override
-  String get account_section => 'Account';
-
-  @override
-  String get close_menu => 'Close menu';
+  String get coming_soon => 'Coming soon';
 
   @override
   String get login => 'Login';
@@ -171,9 +168,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leave_message => 'Leave a message';
-
-  @override
-  String get welcome => 'Welcome to Algarve';
 
   @override
   String get completed => 'Completed';

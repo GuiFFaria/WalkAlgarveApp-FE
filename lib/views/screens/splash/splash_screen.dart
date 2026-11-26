@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/screens/landing/landingpage_screen.dart';
-import 'package:walk_algarve_app/views/screens/zones_list/zones_list_screen.dart';
+import 'package:walk_algarve_app/views/screens/home/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,10 +37,10 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 800));
 
     if (authProvider.isLoggedIn) {
-      print("User is logged in, navigating to ZonesListScreen");
+      print("User is logged in, navigating to HomeScreen");
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const ZonesListScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       if (!isOnline && mounted) {
