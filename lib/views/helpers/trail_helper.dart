@@ -49,6 +49,17 @@ class TrailHelper {
     return value is bool ? value : null;
   }
 
+  static bool isFavorite(Map<String, dynamic> trail) {
+    final value = _properties(trail)['is_favorite'];
+    if (value is num) return value != 0;
+    return value.toString().toLowerCase() == 'true';
+  }
+
+  static void setFavorite(Map<String, dynamic> trail, bool favorite) {
+    final properties = trail['properties'] ??= <String, dynamic>{};
+    properties['is_favorite'] = favorite;
+  }
+
   static Map<dynamic, dynamic> _properties(Map<String, dynamic> trail) {
     final properties = trail['properties'];
     return properties is Map ? properties : const {};

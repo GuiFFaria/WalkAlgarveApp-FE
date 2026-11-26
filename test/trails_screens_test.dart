@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/offline_banner/offline_banner_widget.dart';
+import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/screens/trail_details/trail_details_screen.dart';
 import 'package:walk_algarve_app/views/screens/trails_list/trails_list_screen.dart';
@@ -58,8 +59,13 @@ Future<void> show(
   Widget screen, {
   String language = 'en',
 }) async {
-  await tester.pumpWidget(ChangeNotifierProvider(
-    create: (_) => LocaleProvider()..setLocale(Locale(language)),
+  await tester.pumpWidget(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ChangeNotifierProvider(
+        create: (_) => LocaleProvider()..setLocale(Locale(language)),
+      ),
+    ],
     child: MaterialApp(
       theme: AppTheme.light,
       locale: Locale(language),
@@ -76,6 +82,7 @@ Future<List<http.Request>> openList(
   WidgetTester tester,
   List<Map<String, dynamic>> trails, {
   required Future<void> Function() then,
+  int postStatus = 201,
 }) async {
   final requests = <http.Request>[];
   tester.view.physicalSize = const Size(400, 900);
@@ -89,7 +96,7 @@ Future<List<http.Request>> openList(
       () => MockClient((request) async {
             requests.add(request);
             return request.method == 'POST'
-                ? http.Response('{}', 201)
+                ? http.Response('{"is_favorite": true}', postStatus)
                 : http.Response(jsonEncode(trails), 200);
           }));
   return requests;
@@ -217,7 +224,74 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     final queued = jsonDecode(prefs.getString('pending_favorites')!);
     expect(queued.single['trail_id'], 1);
+    expect(queued.single['favorite'], false);
     expect(requests, isEmpty);
+  });
+
+  testWidgets('a favorite changed offline survives reopening the list',
+      (tester) async {
+    connectivity('none');
+    SharedPreferences.setMockInitialValues({
+      'auth_token': 'token',
+      'cached_trails_zone_3': jsonEncode([trail()]),
+    });
+
+    await openList(tester, [], then: () async {
+      await tester.tap(find.byTooltip(en.favorite_add));
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(const SizedBox());
+      await show(tester, const TrailsListScreen(zone: zone));
+
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
+    });
+  });
+
+  testWidgets('waiting changes are sent before the list is fetched',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': 'token',
+      'pending_favorites': jsonEncode([
+        {'trail_id': 1, 'favorite': true},
+      ]),
+    });
+
+    final requests =
+        await openList(tester, [trail(favorite: true)], then: () async {});
+
+    expect(requests.map((r) => r.method), ['POST', 'GET']);
+  });
+
+  testWidgets('a change still waiting shows on the fetched list',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': 'token',
+      'pending_favorites': jsonEncode([
+        {'trail_id': 1, 'favorite': true},
+      ]),
+    });
+
+    await openList(tester, [trail()], postStatus: 500, then: () async {
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final saved = jsonDecode(prefs.getString('cached_trails_zone_3')!);
+    expect(saved.single['properties']['is_favorite'], true);
+  });
+
+  testWidgets('a favorite the API refuses is undone', (tester) async {
+    await openList(tester, [trail()], postStatus: 404, then: () async {
+      await tester.tap(find.byTooltip(en.favorite_add));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final saved = jsonDecode(prefs.getString('cached_trails_zone_3')!);
+    expect(saved.single['properties']['is_favorite'], false);
   });
 
   testWidgets('an empty list says there are no trails', (tester) async {

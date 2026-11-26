@@ -5,7 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
+import 'package:walk_algarve_app/views/helpers/favorites_store.dart';
+import 'package:walk_algarve_app/views/helpers/trail_cache.dart';
+import 'package:walk_algarve_app/views/helpers/trail_helper.dart';
 import 'package:walk_algarve_app/views/helpers/zone_helper.dart';
+import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/components/empty_state/empty_state_widget.dart';
 import 'package:walk_algarve_app/views/components/language_switch/language_switch_widget.dart';
@@ -29,13 +33,18 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   bool isLoading = true;
   bool isOffline = false;
 
+  late final FavoritesStore _favorites;
+
   int get zoneId => widget.zone["id"];
-  String get cacheKey => "cached_trails_zone_$zoneId";
-  String get pendingKey => "pending_favorites";
+  String get cacheKey => TrailCache.key(zoneId);
 
   @override
   void initState() {
     super.initState();
+    // Built here, while the screen is certainly still open.
+    _favorites = FavoritesStore(
+      refreshToken: context.read<AuthProvider>().tryRefreshAccessToken,
+    );
     loadTrails();
   }
 
@@ -45,13 +54,14 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     final hasInternet = await ConnectivityHelper.hasConnection();
 
     if (hasInternet) {
+      // First, so the list already includes the changes made offline.
+      await _favorites.sync();
       await fetchTrailsFromApi();
-      await syncPendingFavorites();
     } else {
       await loadTrailsFromCache();
     }
 
-    setState(() => isLoading = false);
+    if (mounted) setState(() => isLoading = false);
   }
 
   /// 🛰️ Busca trilhos da API
@@ -73,18 +83,9 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
 
         if (decoded is List) {
           debugPrint("✅ Trilhos carregados da API (${decoded.length})");
-          setState(() {
-            trails = List<Map<String, dynamic>>.from(decoded);
-            isOffline = false;
-          });
-          await prefs.setString(cacheKey, jsonEncode(trails));
+          await _showTrails(decoded, offline: false);
         } else if (decoded is Map && decoded.containsKey("features")) {
-          final decodedTrails = decoded["features"] as List<dynamic>;
-          setState(() {
-            trails = List<Map<String, dynamic>>.from(decodedTrails);
-            isOffline = false;
-          });
-          await prefs.setString(cacheKey, jsonEncode(trails));
+          await _showTrails(decoded["features"] as List, offline: false);
         } else {
           throw Exception("Formato inesperado: ${decoded.runtimeType}");
         }
@@ -103,61 +104,73 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString(cacheKey);
     if (cached != null) {
-      setState(() {
-        trails = List<Map<String, dynamic>>.from(jsonDecode(cached));
-        isOffline = true;
-      });
+      await _showTrails(jsonDecode(cached) as List, offline: true);
     } else {
       trails = [];
     }
   }
 
-  /// 🔁 Sincroniza favoritos pendentes (quando volta online)
-  Future<void> syncPendingFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final pending = prefs.getString(pendingKey);
-    if (pending == null) return;
-
-    final List<Map<String, dynamic>> pendingList =
-        List<Map<String, dynamic>>.from(jsonDecode(pending));
-
-    if (pendingList.isEmpty) return;
-
-    final token = prefs.getString('auth_token');
-    if (token == null) return;
-
-    final baseUrl = dotenv.env['API_BASE_URL']!;
-    final url = Uri.parse("$baseUrl/trails/");
-
-    for (final fav in pendingList) {
-      try {
-        await http.post(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({"trail_id": fav['trail_id']}),
-        );
-        debugPrint("✅ Sincronizado trail ${fav['trail_id']}");
-      } catch (e) {
-        debugPrint("⚠️ Erro ao sincronizar trail ${fav['trail_id']}: $e");
-      }
+  /// Shows the trails with the favorites that are still waiting to be sent.
+  Future<void> _showTrails(List<dynamic> loaded, {required bool offline}) async {
+    final waiting = await _favorites.pending();
+    final list = List<Map<String, dynamic>>.from(loaded);
+    for (final trail in list) {
+      final favorite = waiting[trail["id"]];
+      if (favorite != null) TrailHelper.setFavorite(trail, favorite);
     }
 
-    await prefs.remove(pendingKey);
+    if (!mounted) return;
+    setState(() {
+      trails = list;
+      isOffline = offline;
+    });
+    await _saveTrails();
   }
 
-  /// 🔄 Callback quando o estado de favorito muda no TrailCardWidget
-  void onFavoriteToggled() async {
-    // Atualiza cache e estado
+  Future<void> _saveTrails() async {
     final prefs = await SharedPreferences.getInstance();
-    final cached = prefs.getString(cacheKey);
-    if (cached != null) {
-      setState(() {
-        trails = List<Map<String, dynamic>>.from(jsonDecode(cached));
-      });
+    await prefs.setString(cacheKey, jsonEncode(trails));
+  }
+
+  Future<void> _markFavorite(Object? trailId, bool favorite) async {
+    for (final trail in trails) {
+      if (trail["id"] == trailId) TrailHelper.setFavorite(trail, favorite);
     }
+    if (mounted) setState(() {});
+    await _saveTrails();
+  }
+
+  Future<void> toggleFavorite(Map<String, dynamic> trail) async {
+    final trailId = trail["id"];
+    final favorite = !TrailHelper.isFavorite(trail);
+    await _markFavorite(trailId, favorite);
+    final outcome = await _favorites.setFavorite(trailId, favorite);
+
+    // A later tap has its own answer.
+    final tappedAgain = trails.any(
+      (t) => t["id"] == trailId && TrailHelper.isFavorite(t) != favorite,
+    );
+    if (tappedAgain) return;
+
+    if (outcome == FavoriteOutcome.rejected) {
+      await _markFavorite(trailId, !favorite);
+      return;
+    }
+    if (!mounted) return;
+
+    final translations = AppLocalizations.of(context)!;
+    final message = switch (outcome) {
+      FavoriteOutcome.saved => favorite
+          ? translations.favorite_added
+          : translations.favorite_removed,
+      FavoriteOutcome.queued => favorite
+          ? translations.favorite_added_offline
+          : translations.favorite_removed_offline,
+      _ => translations.session_expired,
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
   }
 
   @override
@@ -230,7 +243,7 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
             TrailCardWidget(
               trail,
               key: ValueKey(trail["id"]),
-              onFavoriteToggled: onFavoriteToggled, // ✅ callback
+              onFavoritePressed: () => toggleFavorite(trail),
             ),
         ],
       ),

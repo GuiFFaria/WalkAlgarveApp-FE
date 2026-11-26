@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar/custom_appbar_widget.dart';
+import 'package:walk_algarve_app/views/helpers/trail_cache.dart';
 import 'package:walk_algarve_app/views/screens/login/login_screen.dart';
 import 'package:walk_algarve_app/views/screens/settings/settings_screen.dart';
 
@@ -56,6 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("auth_token");
     await prefs.remove("user");
+    await TrailCache.clear();
 
     if (context.mounted) {
       Navigator.of(context).pushAndRemoveUntil(
