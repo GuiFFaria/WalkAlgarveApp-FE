@@ -23,7 +23,8 @@ On app launch, the splash screen validates the stored authentication token befor
 
 - Fields: Email, Password
 - Calls `POST /auth/login/` with credentials
-- On success: stores access token + refresh token in `SharedPreferences`
+- On success: stores the user, and the access and refresh tokens through
+  `AuthProvider.setToken`
 - On failure: displays error message from API response
 - Shows loading spinner during request
 
