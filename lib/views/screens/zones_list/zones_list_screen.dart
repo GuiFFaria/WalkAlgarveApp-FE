@@ -4,8 +4,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
-import 'package:walk_algarve_app/views/components/custom_appbar/custom_appbar_widget.dart';
+import 'package:walk_algarve_app/views/helpers/zone_helper.dart';
+import 'package:walk_algarve_app/views/components/empty_state/empty_state_widget.dart';
+import 'package:walk_algarve_app/views/components/language_switch/language_switch_widget.dart';
+import 'package:walk_algarve_app/views/components/offline_banner/offline_banner_widget.dart';
+import 'package:walk_algarve_app/views/components/square_icon_button/square_icon_button_widget.dart';
 import 'package:walk_algarve_app/views/components/zone_card/zone_card_widget.dart';
+import 'package:walk_algarve_app/views/screens/zones_list/municipality_filter_sheet.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 
 class ZonesListScreen extends StatefulWidget {
@@ -16,7 +21,6 @@ class ZonesListScreen extends StatefulWidget {
 }
 
 class _ZonesListScreenState extends State<ZonesListScreen> {
-  List<Map<String, dynamic>> zones = [];
   List<Map<String, dynamic>> allZones = [];
 
   List<int> userZones = [];
@@ -26,6 +30,12 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
   bool isOffline = false;
 
   String? selectedMunicipio;
+
+  List<Map<String, dynamic>> get visibleZones => selectedMunicipio == null
+      ? allZones
+      : allZones
+          .where((z) => ZoneHelper.municipality(z) == selectedMunicipio)
+          .toList();
 
   @override
   void initState() {
@@ -74,12 +84,12 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
         final decodedZones =
             decoded is List ? decoded : decoded["zones"] ?? [];
 
-        zones = decodedZones
+        allZones = decodedZones
             .map<Map<String, dynamic>>(
                 (zone) => Map<String, dynamic>.from(zone))
             .toList();
 
-        await prefs.setString('cached_zones', jsonEncode(zones));
+        await prefs.setString('cached_zones', jsonEncode(allZones));
       }
 
       /// ---------------- USER ZONES ----------------
@@ -110,7 +120,7 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
 
     if (cachedZones != null) {
       final decoded = jsonDecode(cachedZones);
-      zones = decoded
+      allZones = decoded
           .map<Map<String, dynamic>>((z) => Map<String, dynamic>.from(z))
           .toList();
     }
@@ -123,251 +133,148 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
     isOffline = true;
   }
 
-  /// 🔄 Marca zonas que o user possui + ordena
+  /// 🔄 Marca zonas que o user possui
   void mergeZonesWithOwnership() {
-    zones = zones.map((zone) {
+    allZones = allZones.map((zone) {
       return {
         ...zone,
         "user_have": userZones.contains(zone["id"]),
       };
     }).toList();
 
-    zones.sort((a, b) {
-      return (b["user_have"] ? 1 : 0)
-          .compareTo(a["user_have"] ? 1 : 0);
-    });
-
-    allZones = List.from(zones);
-
-    extractMunicipios();
-  }
-
-  /// 📌 Extrai Municípios (String ou Map)
-  void extractMunicipios() {
-    municipios = zones
-        .map<String>((z) {
-          final municipioField = z["municipality"];
-
-          if (municipioField == null) return "";
-
-          if (municipioField is String) return municipioField;
-
-          if (municipioField is Map &&
-              municipioField["name"] != null) {
-            return municipioField["name"];
-          }
-
-          return "";
-        })
+    municipios = allZones
+        .map(ZoneHelper.municipality)
         .where((m) => m.isNotEmpty)
         .toSet()
-        .toList();
+        .toList()
+      ..sort();
 
-    municipios.sort();
+    // A refresh keeps the filter, unless its municipality is gone.
+    if (!municipios.contains(selectedMunicipio)) selectedMunicipio = null;
   }
 
-  /// 🧹 Filtro por município
-  void filterByMunicipio(String? municipio) {
-    setState(() {
-      selectedMunicipio = municipio;
-
-      if (municipio == null || municipio.isEmpty) {
-        zones = List.from(allZones);
-        return;
-      }
-
-      zones = allZones.where((z) {
-        final m = z["municipality"];
-
-        if (m is String) return m == municipio;
-
-        if (m is Map && m["name"] != null) {
-          return m["name"] == municipio;
-        }
-
-        return false;
-      }).toList();
-    });
-  }
-
-  /// 📍 Popup de filtro (NOVO E MAIS BONITO)
-  void openMunicipioFilterPopup() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          title: Text(
-            AppLocalizations.of(context)!.select_municipality,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18, // 🔥 Título maior
-            ),
-          ),
-          
-          content: SizedBox(
-            width: 600, // 🔥 Popup mais largo
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 10),
-                buildMunicipioOption(
-                  title: AppLocalizations.of(context)!.show_all,
-                  value: null,
-                ),
-
-                const SizedBox(height: 10),
-
-                const Divider(),
-
-                ...municipios.map((municipio) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: buildMunicipioOption(
-                      title: municipio,
-                      value: municipio,
-                    ),
-                  );
-                }).toList(),
-
-                const SizedBox(height: 20),
-
-                /// 🔘 BOTÃO FECHAR
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      AppLocalizations.of(context)!.close,
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// Widget elegante para cada opção
-  Widget buildMunicipioOption({
-    required String title,
-    required String? value,
-  }) {
-    final bool selected = selectedMunicipio == value;
-    final colors = Theme.of(context).colorScheme;
-
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        filterByMunicipio(value);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? colors.primaryContainer
-              : colors.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? colors.primary : colors.outlineVariant,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? colors.primary : colors.onSurfaceVariant,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+  void openMunicipalityFilter() {
+    showMunicipalityFilterSheet(
+      context,
+      municipalities: municipios,
+      selected: selectedMunicipio,
+      onSelected: (municipality) =>
+          setState(() => selectedMunicipio = municipality),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBarWidget(
-        title: isOffline
-            ? "${AppLocalizations.of(context)!.zones} (Offline)"
-            : AppLocalizations.of(context)!.zones,
-      ),
-
-      floatingActionButton: GestureDetector(
-        onTap: openMunicipioFilterPopup,
-        child: Container(
-          width: 62,
-          height: 62,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFF4A90E2),
-                Color(0xFF9013FE),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.filter_list,
-            color: Colors.white,
-            size: 30,
-          ),
+      // No visible bar; it keeps the status bar readable in both themes.
+      appBar: AppBar(toolbarHeight: 0),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(child: _buildBody(context)),
+          ],
         ),
       ),
+    );
+  }
 
-      body: SafeArea(
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : zones.isNotEmpty
-                ? RefreshIndicator(
-                    onRefresh: loadZones,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      itemCount: zones.length,
-                      itemBuilder: (context, index) {
-                        return ZoneCardWidget(zones[index], index);
-                      },
-                    ),
-                  )
-                : Center(
-                    child:
-                        Text(AppLocalizations.of(context)!.no_zones_available),
-                  ),
+  Widget _buildHeader(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+    final textTheme = Theme.of(context).textTheme;
+
+    Widget line(String text, TextStyle? style) => FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(text, style: style),
+        );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                line(translations.welcome, textTheme.bodySmall),
+                line(translations.zones, textTheme.headlineMedium),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const LanguageSwitchWidget(),
+          const SizedBox(width: 12),
+          SquareIconButtonWidget(
+            icon: Icons.filter_list,
+            tooltip: translations.select_municipality,
+            onPressed: openMunicipalityFilter,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final zones = visibleZones;
+    final banner = Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: OfflineBannerWidget(message: translations.offline_zones),
+    );
+
+    if (zones.isEmpty) {
+      return Column(
+        children: [
+          if (isOffline)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: banner,
+            ),
+          Expanded(
+            child: EmptyStateWidget(
+              icon: Icons.terrain_outlined,
+              title: translations.no_zones_available,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final owned = zones.where(ZoneHelper.isUnlocked).toList();
+    final others = zones.where((z) => !ZoneHelper.isUnlocked(z)).toList();
+
+    List<Widget> group(String title, List<Map<String, dynamic>> members) => [
+          if (members.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                title,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            for (final zone in members)
+              ZoneCardWidget(zone, key: ValueKey(zone["id"])),
+          ],
+        ];
+
+    return RefreshIndicator(
+      onRefresh: loadZones,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+        children: [
+          if (isOffline) banner,
+          ...group(translations.your_zones, owned),
+          ...group(translations.other_zones, others),
+        ],
       ),
     );
   }

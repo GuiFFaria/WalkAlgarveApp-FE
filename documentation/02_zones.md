@@ -13,20 +13,21 @@ Displays all available zones (geographic regions of Algarve):
 
 - Fetches all zones from `GET /zones/`
 - Fetches user-owned zones from `GET /user/zones/` (authenticated)
-- Owned zones are sorted to the top of the list
-- Non-owned zones display a **lock icon** overlay
-- **Municipality filter**: popup menu to filter zones by municipality
+- Owned zones come first under "Your zones"; the rest are under "Other zones"
+- **Municipality filter**: header button that opens a bottom sheet; pull-to-refresh
+  keeps the choice
 - Supports pull-to-refresh
-- Falls back to cached data when offline; shows "Offline" indicator in AppBar
+- Falls back to cached data when offline and shows an offline banner
 
 ---
 
 ## Zone Details
 
-- Displays the zone's thumbnail image (with loading/error states)
-- Shows localized name and description (Portuguese or English based on app locale)
-- **"View Trails" button** (green) — visible only if user owns the zone → navigates to Trails List
-- **"Buy Zone" button** (blue) — visible if user does not own the zone → currently shows a placeholder snackbar
+- Large photo with a back button over it
+- Localized name (the zone's own name when untranslated) and description
+- Municipality and locked/unlocked labels
+- **"View Trails" button** if the user owns the zone → navigates to Trails List
+- **"Buy Zone" button** otherwise → currently shows a placeholder snackbar
 
 ---
 
@@ -34,8 +35,7 @@ Displays all available zones (geographic regions of Algarve):
 
 Reusable card used in the zones list:
 
-- Cached network image with gradient overlay
-- Zone title and municipality label
-- Lock icon if not owned by the user
-- "See More" button at the bottom
+- Cached network image, or a placeholder (with a lock on locked zones)
+- Zone name, municipality and locked/unlocked labels
+- The whole card opens Zone Details
 - Handles both `String` and `Map` formats for municipality data

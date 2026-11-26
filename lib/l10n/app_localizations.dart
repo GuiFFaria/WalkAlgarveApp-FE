@@ -302,11 +302,47 @@ abstract class AppLocalizations {
   /// **'Buy Zone'**
   String get unlockZone;
 
-  /// No description provided for @seeMore.
+  /// No description provided for @your_zones.
   ///
   /// In en, this message translates to:
-  /// **'See More'**
-  String get seeMore;
+  /// **'Your zones'**
+  String get your_zones;
+
+  /// No description provided for @other_zones.
+  ///
+  /// In en, this message translates to:
+  /// **'Other zones'**
+  String get other_zones;
+
+  /// No description provided for @zone_unlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked'**
+  String get zone_unlocked;
+
+  /// No description provided for @zone_locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get zone_locked;
+
+  /// No description provided for @zone_photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Zone photo'**
+  String get zone_photo;
+
+  /// No description provided for @offline_zones.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Showing zones saved on this phone.'**
+  String get offline_zones;
+
+  /// No description provided for @welcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Algarve'**
+  String get welcome;
 
   /// No description provided for @no_zones_available.
   ///
