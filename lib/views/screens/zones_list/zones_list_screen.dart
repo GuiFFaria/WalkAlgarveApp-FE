@@ -197,7 +197,6 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -267,6 +266,7 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
     required String? value,
   }) {
     final bool selected = selectedMunicipio == value;
+    final colors = Theme.of(context).colorScheme;
 
     return InkWell(
       onTap: () {
@@ -277,10 +277,12 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
-          color: selected ? Colors.blue.shade50 : Colors.grey.shade100,
+          color: selected
+              ? colors.primaryContainer
+              : colors.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? Colors.blue : Colors.grey.shade300,
+            color: selected ? colors.primary : colors.outlineVariant,
             width: selected ? 2 : 1,
           ),
         ),
@@ -288,7 +290,7 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
           children: [
             Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? Colors.blue : Colors.grey,
+              color: selected ? colors.primary : colors.onSurfaceVariant,
             ),
             const SizedBox(width: 10),
             Expanded(

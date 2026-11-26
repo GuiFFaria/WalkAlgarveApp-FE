@@ -468,7 +468,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
@@ -524,7 +524,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade500,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -544,7 +544,10 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                   const SizedBox(width: 4),
                   Text(
                     'of ${totalKm.toStringAsFixed(1)}km',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -554,7 +557,8 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 6,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
                   valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1BA6A1)),
                 ),
               ),
@@ -570,7 +574,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade500,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 letterSpacing: 0.8,
               ),
             ),
@@ -600,7 +604,7 @@ class _TrailMapScreenState extends State<TrailMapScreen> {
           text,
           style: TextStyle(
             fontSize: 13,
-            color: Colors.grey.shade700,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),

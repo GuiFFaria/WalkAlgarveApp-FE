@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 
@@ -25,24 +24,12 @@ class CustomAppBarWidget extends StatelessWidget implements PreferredSizeWidget 
     const double inactiveSize = 18;
 
     return AppBar(
-      backgroundColor: const Color(0xFF1BA6A1),
-      systemOverlayStyle: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFF1BA6A1),
-        statusBarIconBrightness: Brightness.light,
-      ),
-      elevation: 2,
       centerTitle: true,
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      title: Text(title),
       leading: Builder(
         builder: (innerContext) {
           return IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
+            icon: const Icon(Icons.menu),
             onPressed: onMenuPressed ?? () => Scaffold.of(innerContext).openDrawer(),
           );
         },
@@ -58,11 +45,7 @@ class CustomAppBarWidget extends StatelessWidget implements PreferredSizeWidget 
               ),
               const Text(
                 " / ",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               Image.asset(
                 "assets/images/en-flag.png",
