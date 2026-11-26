@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/screens/zone_details/zone_details_screen.dart';
 
@@ -37,24 +38,21 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
         child: Stack(
           children: [
             // 🖼️ Imagem
-            CachedNetworkImage(
-              imageUrl: imageUrl.isNotEmpty
-                  ? imageUrl
-                  : 'https://via.placeholder.com/400x200.png?text=No+Image',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 200,
-              placeholder: (context, url) => Container(
-                color: Colors.grey.shade300,
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-              errorWidget: (context, url, error) => Image.asset(
-                "assets/images/default.jpg",
+            if (imageUrl.isEmpty)
+              const PhotoPlaceholderWidget(dimmed: true)
+            else
+              CachedNetworkImage(
+                imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: 200,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey.shade300,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) =>
+                    const PhotoPlaceholderWidget(dimmed: true),
               ),
-            ),
 
             // Gradiente
             Positioned.fill(
