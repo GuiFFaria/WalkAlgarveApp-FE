@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
 import 'package:walk_algarve_app/views/screens/login/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -22,8 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
 
   Future<bool> _hasInternetConnection() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    final hasInternet = connectivityResult != ConnectivityResult.none;
+    final hasInternet = await ConnectivityHelper.hasConnection();
     print("🌐 Internet connectivity: $hasInternet");
     return hasInternet;
   }
