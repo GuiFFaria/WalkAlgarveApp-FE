@@ -78,7 +78,7 @@ class _ZoneCardWidgetState extends State<ZoneCardWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title!,
+                    title,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
