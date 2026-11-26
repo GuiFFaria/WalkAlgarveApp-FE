@@ -53,7 +53,7 @@ void main() {
     'trail details with a failed photo':
         TrailDetailsScreen(trail: trail(missingPhoto)),
     'a zone card without a photo': ZoneCardWidget(zone('')),
-    'a trail card without a photo': TrailCardWidget(trail(''), 0),
+    'a trail card without a photo': TrailCardWidget(trail('')),
   };
 
   screens.forEach((name, screen) {

@@ -8,6 +8,7 @@ import 'package:walk_algarve_app/views/helpers/zone_helper.dart';
 import 'package:walk_algarve_app/views/components/empty_state/empty_state_widget.dart';
 import 'package:walk_algarve_app/views/components/language_switch/language_switch_widget.dart';
 import 'package:walk_algarve_app/views/components/offline_banner/offline_banner_widget.dart';
+import 'package:walk_algarve_app/views/components/screen_header/screen_header_widget.dart';
 import 'package:walk_algarve_app/views/components/square_icon_button/square_icon_button_widget.dart';
 import 'package:walk_algarve_app/views/components/zone_card/zone_card_widget.dart';
 import 'package:walk_algarve_app/views/screens/zones_list/municipality_filter_sheet.dart';
@@ -181,37 +182,18 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
 
   Widget _buildHeader(BuildContext context) {
     final translations = AppLocalizations.of(context)!;
-    final textTheme = Theme.of(context).textTheme;
 
-    Widget line(String text, TextStyle? style) => FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(text, style: style),
-        );
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                line(translations.welcome, textTheme.bodySmall),
-                line(translations.zones, textTheme.headlineMedium),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          const LanguageSwitchWidget(),
-          const SizedBox(width: 12),
-          SquareIconButtonWidget(
-            icon: Icons.filter_list,
-            tooltip: translations.select_municipality,
-            onPressed: openMunicipalityFilter,
-          ),
-        ],
-      ),
+    return ScreenHeaderWidget(
+      overline: translations.welcome,
+      title: translations.zones,
+      actions: [
+        const LanguageSwitchWidget(),
+        SquareIconButtonWidget(
+          icon: Icons.filter_list,
+          tooltip: translations.select_municipality,
+          onPressed: openMunicipalityFilter,
+        ),
+      ],
     );
   }
 

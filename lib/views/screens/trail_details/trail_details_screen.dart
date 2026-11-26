@@ -1,251 +1,172 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
+import 'package:walk_algarve_app/views/components/info_chip/info_chip_widget.dart';
 import 'package:walk_algarve_app/views/components/photo_placeholder/photo_placeholder_widget.dart';
+import 'package:walk_algarve_app/views/components/square_icon_button/square_icon_button_widget.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
+import 'package:walk_algarve_app/views/helpers/trail_helper.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
+import 'package:walk_algarve_app/views/screens/trail_details/trail_fact_tiles.dart';
 import 'package:walk_algarve_app/views/screens/trail_map/trail_map_screen.dart';
 
-class TrailDetailsScreen extends StatefulWidget {
+class TrailDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> trail;
 
   const TrailDetailsScreen({super.key, required this.trail});
 
-  @override
-  State<TrailDetailsScreen> createState() => _TrailDetailsScreenState();
-}
+  static const _photoHeight = 300.0;
 
-class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
+  /// How far the details panel covers the bottom of the photo.
+  static const _overlap = 28.0;
+
   @override
   Widget build(BuildContext context) {
     final translations = AppLocalizations.of(context)!;
-    final trail = widget.trail;
-    final locale = context.watch<LocaleProvider>().locale.languageCode;
-
-    final title = TranslationHelper.getValue(
-      trail,
-      locale,
-      "name",
-      fallback: translations.untitled_trail,
-    );
-
-    final description = TranslationHelper.getValue(
-      trail,
-      locale,
-      "description",
-      fallback: trail["description"]?.toString() ?? translations.no_description,
-    );
-
-    final is_bike_friendly = trail["properties"]?["is_bike_friendly"];
-
-    debugPrint("📘 Descrição traduzida: $is_bike_friendly");
-
-    // The API sends an empty address for a trail without a photo.
-    final thumbnail = [trail["properties"]?["thumbnail_url"], trail["image"]]
-        .map((url) => url?.toString() ?? "")
-        .firstWhere((url) => url.isNotEmpty, orElse: () => "");
-
-    final distance = trail["properties"]["distance_km"]?.toString() ?? "—";
-    final duration = trail["properties"]["duration_min"]?.toString() ?? "—";
-    final type =
-        trail["properties"]?["trail_type"]?.toString().toLowerCase() ?? "—";
-    final difficulty = trail["properties"]?["difficulty"]?.toString() ?? "—";
-
-    final safeTop = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          /// LAYER 1: IMAGEM DE CAPA
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: SizedBox(
-              height: 320,
-              width: double.infinity,
-              child: thumbnail.isEmpty
-                  ? const PhotoPlaceholderWidget(dimmed: true)
-                  : Image.network(
-                      thumbnail,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const PhotoPlaceholderWidget(dimmed: true),
-                    ),
-            ),
+            height: _photoHeight,
+            child: _buildPhoto(context),
           ),
-
-          /// LAYER 2: CARTÃO BRANCO
-          Positioned(
-            top: 290,
-            left: 0,
-            right: 0,
-            bottom: 0,
+          // Only the panel scrolls, so text never runs under the status bar.
+          Positioned.fill(
+            top: _photoHeight - _overlap,
             child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(35)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(35),
+                  top: Radius.circular(_overlap),
                 ),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(
-                    top: 30,
-                    left: 18,
-                    right: 18,
-                    bottom: 50,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        translations.description,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        child: Text(
-                          description,
-                          textAlign: TextAlign.justify,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            height: 1.6,
-                            color: Colors.black87,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                child: _buildDetails(context),
               ),
             ),
           ),
-
-          /// LAYER 3: TÍTULO E ÍCONES
           Positioned(
-            left: 20,
-            right: 20,
-            top: safeTop + 70,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
-                  ),
+            top: 0,
+            left: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                child: SquareIconButtonWidget(
+                  icon: Icons.chevron_left,
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.maybePop(context),
                 ),
-
-                const SizedBox(height: 14),
-
-                Wrap(
-                  spacing: 25,
-                  runSpacing: 8,
-                  children: [
-                    _iconText(Icons.route, "$distance km"),
-                    _iconText(Icons.timer, "$duration h"),
-                    _iconText(Icons.cached, type),
-                    _iconText(Icons.hiking, difficulty),
-                    if (is_bike_friendly)
-                      _iconText(Icons.pedal_bike, translations.bike_friendly)
-                    else
-                      _iconText(Icons.block, translations.no_bikes),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          /// LAYER 4: BOTÃO DO MAPA
-          Positioned(
-            top: 255,
-            right: 25,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TrailMapScreen(trail: trail),
-                  ),
-                );
-              },
-              child: Container(
-                width: 62,
-                height: 62,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.map,
-                  color: Color(0xFF4A90E2),
-                  size: 32,
-                ),
-              ),
-            ),
-          ),
-
-          /// LAYER 5: BOTÃO VOLTAR
-          Positioned(
-            top: safeTop + 10,
-            left: 10,
-            child: CircleAvatar(
-              backgroundColor: Colors.black45,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
               ),
             ),
           ),
         ],
       ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: FilledButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => TrailMapScreen(trail: trail)),
+            ),
+            icon: const Icon(Icons.map_outlined),
+            label: Text(translations.view_map),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _iconText(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+  Widget _buildPhoto(BuildContext context) {
+    final photo = TrailHelper.photo(trail);
+    final placeholder = PhotoPlaceholderWidget(
+      caption: AppLocalizations.of(context)!.trail_photo,
+    );
+    if (photo.isEmpty) return placeholder;
+
+    return Image.network(
+      photo,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, progress) => progress == null
+          ? child
+          : const Center(child: CircularProgressIndicator()),
+      errorBuilder: (_, __, ___) => placeholder,
+    );
+  }
+
+  Widget _buildDetails(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+    final locale = context.watch<LocaleProvider>().locale.languageCode;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final distance = TrailHelper.distance(trail, locale);
+    final duration = TrailHelper.duration(trail, locale);
+    final type = TrailHelper.type(trail);
+    final difficulty = TrailHelper.difficulty(trail, translations);
+    final bikeFriendly = TrailHelper.bikeFriendly(trail);
+
+    final facts = [
+      if (distance != null) (Icons.route, distance),
+      if (duration != null) (Icons.schedule, duration),
+      if (type != null)
+        (
+          TrailHelper.isCircular(trail) ? Icons.loop : Icons.arrow_forward,
+          type,
+        ),
+      if (difficulty != null) (Icons.terrain, difficulty),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: Colors.white),
-        const SizedBox(width: 6),
         Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            shadows: [Shadow(color: Colors.black87, blurRadius: 6)],
+          TranslationHelper.getValue(
+            trail,
+            locale,
+            "name",
+            fallback: translations.untitled_trail,
+          ),
+          style: theme.textTheme.titleLarge?.copyWith(fontSize: 24),
+        ),
+        const SizedBox(height: 14),
+        if (facts.isNotEmpty) ...[
+          TrailFactTiles(facts: facts),
+          const SizedBox(height: 14),
+        ],
+        if (bikeFriendly != null) ...[
+          InfoChipWidget(
+            icon: bikeFriendly ? Icons.pedal_bike : Icons.block,
+            label: bikeFriendly
+                ? translations.bike_friendly
+                : translations.no_bikes,
+            background: bikeFriendly
+                ? colors.primaryContainer
+                : colors.surfaceContainerHighest,
+            foreground: bikeFriendly
+                ? colors.onPrimaryContainer
+                : colors.onSurface,
+          ),
+          const SizedBox(height: 14),
+        ],
+        Text(translations.description, style: theme.textTheme.titleMedium),
+        const SizedBox(height: 14),
+        Text(
+          TranslationHelper.getValue(
+            trail,
+            locale,
+            "description",
+            fallback: trail["description"]?.toString() ??
+                translations.no_description,
+          ),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colors.onSurfaceVariant,
           ),
         ),
       ],

@@ -206,6 +206,35 @@ class AppLocalizationsPt extends AppLocalizations {
   String get trail_history_option => 'Histórico de trilhos';
 
   @override
+  String get trail_photo => 'Foto do trilho';
+
+  @override
+  String get view_map => 'Ver mapa';
+
+  @override
+  String get offline_saved_data => 'Sem ligação. A mostrar dados guardados.';
+
+  @override
+  String get difficulty_easy => 'Fácil';
+
+  @override
+  String get difficulty_moderate => 'Moderado';
+
+  @override
+  String get difficulty_hard => 'Difícil';
+
+  @override
+  String get favorite_add => 'Adicionar aos favoritos';
+
+  @override
+  String get favorite_remove => 'Remover dos favoritos';
+
+  @override
+  String zone_subtitle(String zone) {
+    return 'Zona de $zone';
+  }
+
+  @override
   String get favorite_added => 'Adicionado aos favoritos';
 
   @override

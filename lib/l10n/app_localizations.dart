@@ -482,6 +482,60 @@ abstract class AppLocalizations {
   /// **'Trail history'**
   String get trail_history_option;
 
+  /// No description provided for @trail_photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Trail photo'**
+  String get trail_photo;
+
+  /// No description provided for @view_map.
+  ///
+  /// In en, this message translates to:
+  /// **'View map'**
+  String get view_map;
+
+  /// No description provided for @offline_saved_data.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Showing saved data.'**
+  String get offline_saved_data;
+
+  /// No description provided for @difficulty_easy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get difficulty_easy;
+
+  /// No description provided for @difficulty_moderate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get difficulty_moderate;
+
+  /// No description provided for @difficulty_hard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get difficulty_hard;
+
+  /// No description provided for @favorite_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get favorite_add;
+
+  /// No description provided for @favorite_remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get favorite_remove;
+
+  /// No description provided for @zone_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{zone} zone'**
+  String zone_subtitle(String zone);
+
   /// No description provided for @favorite_added.
   ///
   /// In en, this message translates to:

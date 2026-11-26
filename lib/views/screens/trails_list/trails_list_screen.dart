@@ -3,16 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
-import 'package:walk_algarve_app/views/components/custom_appbar/custom_appbar_widget.dart';
+import 'package:walk_algarve_app/views/helpers/zone_helper.dart';
+import 'package:walk_algarve_app/views/context/locale_provider.dart';
+import 'package:walk_algarve_app/views/components/empty_state/empty_state_widget.dart';
+import 'package:walk_algarve_app/views/components/language_switch/language_switch_widget.dart';
+import 'package:walk_algarve_app/views/components/offline_banner/offline_banner_widget.dart';
+import 'package:walk_algarve_app/views/components/screen_header/screen_header_widget.dart';
+import 'package:walk_algarve_app/views/components/square_icon_button/square_icon_button_widget.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/trail_card/trail_card_widget.dart';
 
-
 class TrailsListScreen extends StatefulWidget {
-  final int zoneId;
+  final Map<String, dynamic> zone;
 
-  const TrailsListScreen({super.key, required this.zoneId});
+  const TrailsListScreen({super.key, required this.zone});
 
   @override
   State<TrailsListScreen> createState() => _TrailsListScreenState();
@@ -23,7 +29,8 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   bool isLoading = true;
   bool isOffline = false;
 
-  String get cacheKey => "cached_trails_zone_${widget.zoneId}";
+  int get zoneId => widget.zone["id"];
+  String get cacheKey => "cached_trails_zone_$zoneId";
   String get pendingKey => "pending_favorites";
 
   @override
@@ -51,7 +58,7 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   Future<void> fetchTrailsFromApi() async {
     try {
       final baseUrl = dotenv.env['API_BASE_URL']!;
-      final url = Uri.parse("$baseUrl/trails/?zone=${widget.zoneId}");
+      final url = Uri.parse("$baseUrl/trails/?zone=$zoneId");
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
@@ -155,34 +162,77 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+    final locale = context.watch<LocaleProvider>().locale.languageCode;
+
     return Scaffold(
-      appBar: CustomAppBarWidget(
-        title: isOffline
-            ? "${AppLocalizations.of(context)!.trails} (Offline)"
-            : AppLocalizations.of(context)!.trails,
-      ),
+      // No visible bar; it keeps the status bar readable in both themes.
+      appBar: AppBar(toolbarHeight: 0, automaticallyImplyLeading: false),
       body: SafeArea(
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : trails.isNotEmpty
-                ? RefreshIndicator(
-                    onRefresh: loadTrails,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      itemCount: trails.length,
-                      itemBuilder: (context, index) {
-                        final trail = trails[index];
-                        return TrailCardWidget(
-                          trail,
-                          index,
-                          onFavoriteToggled: onFavoriteToggled, // ✅ callback
-                        );
-                      },
-                    ),
-                  )
-                : Center(
-                    child: Text(AppLocalizations.of(context)!.no_trails_available),
-                  ),
+        child: Column(
+          children: [
+            ScreenHeaderWidget(
+              leading: SquareIconButtonWidget(
+                icon: Icons.chevron_left,
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => Navigator.maybePop(context),
+              ),
+              title: translations.trails,
+              subtitle: translations.zone_subtitle(
+                ZoneHelper.name(widget.zone, locale),
+              ),
+              actions: const [LanguageSwitchWidget()],
+            ),
+            Expanded(child: _buildBody(context)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final translations = AppLocalizations.of(context)!;
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final banner = Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: OfflineBannerWidget(message: translations.offline_saved_data),
+    );
+
+    if (trails.isEmpty) {
+      return Column(
+        children: [
+          if (isOffline)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: banner,
+            ),
+          Expanded(
+            child: EmptyStateWidget(
+              icon: Icons.hiking,
+              title: translations.no_trails_available,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: loadTrails,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+        children: [
+          if (isOffline) banner,
+          for (final trail in trails)
+            TrailCardWidget(
+              trail,
+              key: ValueKey(trail["id"]),
+              onFavoriteToggled: onFavoriteToggled, // ✅ callback
+            ),
+        ],
       ),
     );
   }

@@ -204,6 +204,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trail_history_option => 'Trail history';
 
   @override
+  String get trail_photo => 'Trail photo';
+
+  @override
+  String get view_map => 'View map';
+
+  @override
+  String get offline_saved_data => 'No connection. Showing saved data.';
+
+  @override
+  String get difficulty_easy => 'Easy';
+
+  @override
+  String get difficulty_moderate => 'Moderate';
+
+  @override
+  String get difficulty_hard => 'Hard';
+
+  @override
+  String get favorite_add => 'Add to favorites';
+
+  @override
+  String get favorite_remove => 'Remove from favorites';
+
+  @override
+  String zone_subtitle(String zone) {
+    return '$zone zone';
+  }
+
+  @override
   String get favorite_added => 'Added to favorites';
 
   @override
