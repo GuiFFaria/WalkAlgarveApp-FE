@@ -5,9 +5,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
+import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
 import 'package:walk_algarve_app/views/helpers/translations_helper.dart';
 import 'package:walk_algarve_app/views/screens/trail_details/trail_details_screen.dart';
 
@@ -52,11 +52,6 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
     debugPrint("🔹 Trail ${widget.trail["id"]} favorito: $isFavorite");
   }
 
-  Future<bool> _checkConnection() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    return connectivityResult != ConnectivityResult.none;
-  }
-
   Future<void> _toggleFavorite() async {
     final translations = AppLocalizations.of(context)!;
     final trailId = widget.trail["id"];
@@ -75,7 +70,7 @@ class _TrailCardWidgetState extends State<TrailCardWidget> {
 
     final baseUrl = dotenv.env['API_BASE_URL']!;
     final url = Uri.parse("$baseUrl/trails/");
-    final hasInternet = await _checkConnection();
+    final hasInternet = await ConnectivityHelper.hasConnection();
 
     final cacheKey =
         "cached_trails_zone_${widget.trail["zone_id"] ?? "unknown"}";

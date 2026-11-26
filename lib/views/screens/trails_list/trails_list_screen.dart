@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
 import 'package:walk_algarve_app/views/components/custom_appbar/custom_appbar_widget.dart';
 import 'package:walk_algarve_app/views/components/custom_drawer/custom_drawer_widget.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
@@ -33,16 +33,10 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     loadTrails();
   }
 
-  /// 🔌 Verifica conexão
-  Future<bool> checkConnection() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    return connectivityResult != ConnectivityResult.none;
-  }
-
   /// 🌐 Carrega trilhos (API se online, cache se offline)
   Future<void> loadTrails() async {
     setState(() => isLoading = true);
-    final hasInternet = await checkConnection();
+    final hasInternet = await ConnectivityHelper.hasConnection();
 
     if (hasInternet) {
       await fetchTrailsFromApi();
