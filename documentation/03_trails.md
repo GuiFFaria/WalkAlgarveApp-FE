@@ -13,7 +13,7 @@ Displays all trails belonging to a specific zone:
 
 - Fetches from `GET /trails/?zone={id}`
 - Handles both plain JSON list and GeoJSON `features` array response formats
-- Syncs pending favorite toggles (queued while offline) when back online
+- Sends waiting favorite changes before fetching, and shows the ones still waiting
 - Pull-to-refresh support
 - Offline fallback with cached data and an offline banner
 - Header with a back button, the zone's name and the language switch
@@ -28,9 +28,10 @@ Each trail is displayed as a card with:
 - Trail name, distance (km), duration (hours), type, and difficulty. Missing facts are
   left out; the difficulties Easy, Moderate and Hard are translated
 - **Heart button** for favoriting:
-  - Toggles immediately in the UI (optimistic update)
-  - If online: calls `POST /trails/` with Bearer token
-  - If offline: queues the action in `pending_favorites` (SharedPreferences) for later sync
+  - Toggles immediately in the UI (optimistic update) and in the saved list
+  - Sends the change with `POST /trails/`, or keeps it for later (see
+    [Offline Support](07_offline_support.md))
+  - A change the API refuses is undone
 
 ---
 

@@ -126,6 +126,8 @@ void main() {
       (tester) async {
     await http.runWithClient(() async {
       await openApp(tester);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_trails_zone_3', '[]');
       await tester.tap(tab(pt.profile));
       await tester.pumpAndSettle();
 
@@ -136,6 +138,7 @@ void main() {
 
       expect(find.byType(LoginScreen), findsOneWidget);
       expect(find.byType(AppTabBarWidget), findsNothing);
+      expect(prefs.containsKey('cached_trails_zone_3'), isFalse);
 
       final fields = find.byType(TextField);
       await tester.enterText(fields.at(0), 'hiker@example.com');

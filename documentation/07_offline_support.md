@@ -8,7 +8,7 @@
 
 Every screen that fetches remote data first checks for internet connectivity. If offline:
 - Loads data from local cache
-- Shows an **"Offline"** indicator in the AppBar title
+- Shows an offline banner (zones and trails list)
 
 ---
 
@@ -22,12 +22,27 @@ Every screen that fetches remote data first checks for internet connectivity. If
 | `cached_zones` | All zones list |
 | `cached_user_zones` | List of zone IDs owned by the user |
 | `cached_trails_zone_{id}` | Trails for a specific zone |
-| `pending_favorites` | Queued favorite toggles (offline actions) |
+| `pending_favorites` | Favorite changes waiting to be confirmed |
+
+Logging out from Profile removes the `cached_trails_zone_{id}` lists, which hold the
+account's favorites.
 
 ---
 
 ## Pending Favorites Sync
 
-When the user favorites/unfavorites a trail while offline:
-1. The action is stored in `pending_favorites` (list of trail IDs + action type)
-2. On the next app open or manual refresh while online, the queue is flushed and each action is sent to the API
+Handled by `lib/views/helpers/favorites_store.dart`.
+
+1. Every change is first written to `pending_favorites` as
+   `{"trail_id", "favorite", "user_id"}`; only the latest choice per trail is kept.
+2. It is sent at once when online, and otherwise when a trail list is next opened or
+   refreshed online, before the list is fetched.
+3. `POST /trails/` only flips a favorite, so the app compares the `is_favorite` in the
+   reply with the wanted state and sends once more if they differ.
+4. A change is removed when the API confirms it. It stays after a lost connection, a
+   server error or an unexpected reply, and while the user has to sign in again (an
+   expired token is renewed first).
+5. A change the API refuses (for example, a removed trail) is dropped.
+6. Only the signed-in account's changes are sent and shown.
+
+Changes queued by earlier versions have no `favorite` or `user_id`; each is sent once.
