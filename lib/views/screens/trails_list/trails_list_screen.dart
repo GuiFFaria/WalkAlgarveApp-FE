@@ -33,6 +33,7 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   bool isLoading = true;
   bool isOffline = false;
 
+  late final AuthProvider _auth;
   late final FavoritesStore _favorites;
 
   int get zoneId => widget.zone["id"];
@@ -42,9 +43,8 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   void initState() {
     super.initState();
     // Built here, while the screen is certainly still open.
-    _favorites = FavoritesStore(
-      refreshToken: context.read<AuthProvider>().tryRefreshAccessToken,
-    );
+    _auth = context.read<AuthProvider>();
+    _favorites = FavoritesStore(refreshToken: _auth.tryRefreshAccessToken);
     loadTrails();
   }
 
@@ -54,9 +54,11 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     final hasInternet = await ConnectivityHelper.hasConnection();
 
     if (hasInternet) {
+      // The API shows an expired token no favorites, without an error.
+      final signedIn = await _auth.ensureFreshToken();
       // First, so the list already includes the changes made offline.
-      await _favorites.sync();
-      await fetchTrailsFromApi();
+      if (signedIn) await _favorites.sync();
+      await fetchTrailsFromApi(keepSavedFavorites: !signedIn);
     } else {
       await loadTrailsFromCache();
     }
@@ -65,7 +67,7 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
   }
 
   /// 🛰️ Busca trilhos da API
-  Future<void> fetchTrailsFromApi() async {
+  Future<void> fetchTrailsFromApi({bool keepSavedFavorites = false}) async {
     try {
       final baseUrl = dotenv.env['API_BASE_URL']!;
       final url = Uri.parse("$baseUrl/trails/?zone=$zoneId");
@@ -81,14 +83,20 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
 
+        final List<dynamic> loaded;
         if (decoded is List) {
           debugPrint("✅ Trilhos carregados da API (${decoded.length})");
-          await _showTrails(decoded, offline: false);
+          loaded = decoded;
         } else if (decoded is Map && decoded.containsKey("features")) {
-          await _showTrails(decoded["features"] as List, offline: false);
+          loaded = decoded["features"] as List;
         } else {
           throw Exception("Formato inesperado: ${decoded.runtimeType}");
         }
+        await _showTrails(
+          loaded,
+          offline: false,
+          favorites: keepSavedFavorites ? await _savedFavorites() : const {},
+        );
       } else {
         debugPrint("⚠️ Falha no carregamento da API: ${response.statusCode}");
         await loadTrailsFromCache();
@@ -110,12 +118,28 @@ class _TrailsListScreenState extends State<TrailsListScreen> {
     }
   }
 
-  /// Shows the trails with the favorites that are still waiting to be sent.
-  Future<void> _showTrails(List<dynamic> loaded, {required bool offline}) async {
-    final waiting = await _favorites.pending();
+  Future<Map<Object?, bool>> _savedFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString(cacheKey);
+    if (cached == null) return const {};
+    return {
+      for (final trail
+          in List<Map<String, dynamic>>.from(jsonDecode(cached)))
+        trail["id"]: TrailHelper.isFavorite(trail),
+    };
+  }
+
+  /// Shows the trails with [favorites] in place of the ones they came with, and
+  /// the changes still waiting to be sent over both.
+  Future<void> _showTrails(
+    List<dynamic> loaded, {
+    required bool offline,
+    Map<Object?, bool> favorites = const {},
+  }) async {
+    final wanted = {...favorites, ...await _favorites.pending()};
     final list = List<Map<String, dynamic>>.from(loaded);
     for (final trail in list) {
-      final favorite = waiting[trail["id"]];
+      final favorite = wanted[trail["id"]];
       if (favorite != null) TrailHelper.setFavorite(trail, favorite);
     }
 
