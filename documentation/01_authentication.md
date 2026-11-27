@@ -14,7 +14,8 @@ On app launch, the splash screen validates the stored authentication token befor
 
 - If a valid, non-expired access token exists → navigates to Zones List
 - If the token is expired but a refresh token exists → attempts a silent refresh via `/auth/token/refresh/`
-- If offline and a token exists → navigates to Zones List (offline mode)
+- If the refresh can't be completed (offline, timeout, server error or unexpected reply) → keeps the session and navigates to Zones List (offline mode)
+- If the API rejects the refresh token (401), or there is none → signs out
 - Otherwise → navigates to Landing Page (unauthenticated)
 
 ---
@@ -48,6 +49,7 @@ The `AuthProvider` (ChangeNotifier) manages the full JWT lifecycle:
 |---|---|
 | `loadToken()` | Reads tokens from SharedPreferences on startup |
 | `setToken(access, refresh)` | Persists tokens locally and notifies listeners |
-| `logout()` | Clears tokens from memory and SharedPreferences |
+| `logout()` | Clears the tokens and the account's saved data |
 | `_isTokenExpired(token)` | Decodes JWT payload and checks `exp` field |
-| `_refreshAccessToken()` | Calls refresh endpoint and updates access token |
+| `_refreshAccessToken()` | Renews the token at startup; signs out only if the session is rejected |
+| `tryRefreshAccessToken()` | Renews the token without signing out on failure |

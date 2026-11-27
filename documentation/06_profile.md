@@ -35,6 +35,6 @@ Three stat cards are shown but use hardcoded values:
 ## Logout
 
 - Red logout button at the bottom
-- Calls `AuthProvider.logout()` → clears both tokens from memory and storage
-- Removes the saved user, owned zones and trail lists
+- Calls `AuthProvider.logout()` → clears both tokens, the saved user, owned zones and
+  trail lists
 - Opens the Login screen
