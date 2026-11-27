@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/views/helpers/connectivity_helper.dart';
 import 'package:walk_algarve_app/views/helpers/zone_helper.dart';
+import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/components/empty_state/empty_state_widget.dart';
 import 'package:walk_algarve_app/views/components/language_switch/language_switch_widget.dart';
 import 'package:walk_algarve_app/views/components/offline_banner/offline_banner_widget.dart';
@@ -32,6 +34,8 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
 
   String? selectedMunicipio;
 
+  late final AuthProvider _auth;
+
   List<Map<String, dynamic>> get visibleZones => selectedMunicipio == null
       ? allZones
       : allZones
@@ -41,6 +45,8 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
   @override
   void initState() {
     super.initState();
+    // Read here, while the screen is certainly still open.
+    _auth = context.read<AuthProvider>();
     loadZones();
   }
 
@@ -56,7 +62,7 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
       await loadZonesFromCache();
     }
 
-    setState(() => isLoading = false);
+    if (mounted) setState(() => isLoading = false);
   }
 
   /// 🌍 API: Obtém todas as zonas + zonas do utilizador
@@ -67,12 +73,14 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
       final userZonesUrl = Uri.parse("$baseUrl/user/zones/");
 
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
 
       /// Request ZONES
       final zonesResponse = await http.get(zonesUrl);
 
       /// Request USER ZONES
+      // If it can't be renewed, the request fails and the saved zones are kept.
+      await _auth.ensureFreshToken();
+      final token = prefs.getString('auth_token');
       final userZonesResponse = await http.get(
         userZonesUrl,
         headers: {'Authorization': 'Bearer $token'},
@@ -103,6 +111,8 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
 
         await prefs.setString(
             'cached_user_zones', jsonEncode(userZones));
+      } else {
+        restoreUserZones(prefs);
       }
 
       mergeZonesWithOwnership();
@@ -117,7 +127,6 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
     final prefs = await SharedPreferences.getInstance();
 
     final cachedZones = prefs.getString('cached_zones');
-    final cachedUserZones = prefs.getString('cached_user_zones');
 
     if (cachedZones != null) {
       final decoded = jsonDecode(cachedZones);
@@ -126,12 +135,15 @@ class _ZonesListScreenState extends State<ZonesListScreen> {
           .toList();
     }
 
-    if (cachedUserZones != null) {
-      userZones = List<int>.from(jsonDecode(cachedUserZones));
-    }
+    restoreUserZones(prefs);
 
     mergeZonesWithOwnership();
     isOffline = true;
+  }
+
+  void restoreUserZones(SharedPreferences prefs) {
+    final saved = prefs.getString('cached_user_zones');
+    if (saved != null) userZones = List<int>.from(jsonDecode(saved));
   }
 
   /// 🔄 Marca zonas que o user possui

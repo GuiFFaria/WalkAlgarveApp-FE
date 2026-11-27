@@ -24,6 +24,9 @@ Every screen that fetches remote data first checks for internet connectivity. If
 | `cached_trails_zone_{id}` | Trails for a specific zone |
 | `pending_favorites` | Favorite changes waiting to be confirmed |
 
+Only a successful `GET /user/zones/` replaces `cached_user_zones`. When that request
+doesn't succeed, even online, the zones list shows the saved ones.
+
 Signing out removes both tokens, `user`, `cached_user_zones` and the
 `cached_trails_zone_{id}` lists, which belong to the account. It happens from the Logout
 button, or at startup when the API rejects the session. Being offline never signs out.

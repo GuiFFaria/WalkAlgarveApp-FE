@@ -12,7 +12,10 @@
 Displays all available zones (geographic regions of Algarve):
 
 - Fetches all zones from `GET /zones/`
-- Fetches user-owned zones from `GET /user/zones/` (authenticated)
+- Fetches user-owned zones from `GET /user/zones/` (authenticated), after renewing a
+  token that has expired or is about to
+- Keeps the saved owned zones when that request doesn't succeed, including after a
+  failed renewal, without signing out
 - Owned zones come first under "Your zones"; the rest are under "Other zones"
 - **Municipality filter**: header button that opens a bottom sheet; pull-to-refresh
   keeps the choice
