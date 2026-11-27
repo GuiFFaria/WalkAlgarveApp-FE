@@ -22,6 +22,15 @@ final pt = lookupAppLocalizations(const Locale('pt'));
 
 const zone = {'id': 3, 'name': 'Faro'};
 
+/// A token as the app reads it: only the expiry matters.
+String token(Duration expiresIn) {
+  final expiry = DateTime.now().add(expiresIn).millisecondsSinceEpoch ~/ 1000;
+  final payload = base64Url.encode(utf8.encode('{"exp": $expiry}'));
+  return 'header.$payload.signature';
+}
+
+final valid = token(const Duration(hours: 1));
+
 Map<String, dynamic> trail({
   String name = 'Seven Valleys',
   Map<String, dynamic> facts = const {
@@ -83,6 +92,7 @@ Future<List<http.Request>> openList(
   List<Map<String, dynamic>> trails, {
   required Future<void> Function() then,
   int postStatus = 201,
+  Future<http.Response> Function(http.Request)? api,
 }) async {
   final requests = <http.Request>[];
   tester.view.physicalSize = const Size(400, 900);
@@ -95,6 +105,7 @@ Future<List<http.Request>> openList(
   },
       () => MockClient((request) async {
             requests.add(request);
+            if (api != null) return api(request);
             return request.method == 'POST'
                 ? http.Response('{"is_favorite": true}', postStatus)
                 : http.Response(jsonEncode(trails), 200);
@@ -104,7 +115,7 @@ Future<List<http.Request>> openList(
 
 void main() {
   setUp(() {
-    SharedPreferences.setMockInitialValues({'auth_token': 'token'});
+    SharedPreferences.setMockInitialValues({'auth_token': valid});
     dotenv.testLoad(fileInput: 'API_BASE_URL=http://api.test/api');
     connectivity('wifi');
   });
@@ -201,13 +212,13 @@ void main() {
 
     final saved = requests.singleWhere((r) => r.method == 'POST');
     expect(jsonDecode(saved.body), {'trail_id': 1});
-    expect(saved.headers['Authorization'], 'Bearer token');
+    expect(saved.headers['Authorization'], 'Bearer $valid');
   });
 
   testWidgets('a favorite changed offline is queued', (tester) async {
     connectivity('none');
     SharedPreferences.setMockInitialValues({
-      'auth_token': 'token',
+      'auth_token': valid,
       'cached_trails_zone_3': jsonEncode([trail(favorite: true)]),
     });
 
@@ -232,7 +243,7 @@ void main() {
       (tester) async {
     connectivity('none');
     SharedPreferences.setMockInitialValues({
-      'auth_token': 'token',
+      'auth_token': valid,
       'cached_trails_zone_3': jsonEncode([trail()]),
     });
 
@@ -250,7 +261,7 @@ void main() {
   testWidgets('waiting changes are sent before the list is fetched',
       (tester) async {
     SharedPreferences.setMockInitialValues({
-      'auth_token': 'token',
+      'auth_token': valid,
       'pending_favorites': jsonEncode([
         {'trail_id': 1, 'favorite': true},
       ]),
@@ -265,7 +276,7 @@ void main() {
   testWidgets('a change still waiting shows on the fetched list',
       (tester) async {
     SharedPreferences.setMockInitialValues({
-      'auth_token': 'token',
+      'auth_token': valid,
       'pending_favorites': jsonEncode([
         {'trail_id': 1, 'favorite': true},
       ]),
@@ -292,6 +303,102 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     final saved = jsonDecode(prefs.getString('cached_trails_zone_3')!);
     expect(saved.single['properties']['is_favorite'], false);
+  });
+
+  group('with a token that needs renewing', () {
+    /// Answers like the real API, which shows no favorites to an expired token.
+    Future<http.Response> Function(http.Request) api({int renewal = 200}) =>
+        (request) async {
+          if (request.url.path.endsWith('/auth/token/refresh/')) {
+            return http.Response('{"access": "renewed"}', renewal);
+          }
+          if (request.method == 'POST') return http.Response('', 401);
+          final signedIn =
+              request.headers['Authorization'] == 'Bearer renewed';
+          return http.Response(
+              jsonEncode([trail(favorite: signedIn)]), 200);
+        };
+
+    void signIn({
+      Duration expiresIn = const Duration(hours: -1),
+      bool savedFavorite = true,
+      List<Map<String, dynamic>> waiting = const [],
+    }) {
+      SharedPreferences.setMockInitialValues({
+        'auth_token': token(expiresIn),
+        'refresh_token': 'refresh',
+        'cached_trails_zone_3':
+            jsonEncode([trail(favorite: savedFavorite)]),
+        if (waiting.isNotEmpty) 'pending_favorites': jsonEncode(waiting),
+      });
+    }
+
+    Future<bool> savedHeart() async {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = jsonDecode(prefs.getString('cached_trails_zone_3')!);
+      return saved.single['properties']['is_favorite'];
+    }
+
+    for (final (name, expiresIn) in [
+      ('an expired token', const Duration(hours: -1)),
+      ('a token about to expire', const Duration(seconds: 20)),
+    ]) {
+      testWidgets('$name is renewed before the trails are asked for',
+          (tester) async {
+        signIn(expiresIn: expiresIn, savedFavorite: false);
+
+        final requests = await openList(tester, [], api: api(),
+            then: () async {
+          expect(find.byIcon(Icons.favorite), findsOneWidget);
+        });
+
+        expect(requests.map((r) => r.url.path),
+            ['/api/auth/token/refresh/', '/api/trails/']);
+      });
+    }
+
+    for (final (name, status) in [
+      ('fails', 500),
+      ('is refused', 401),
+    ]) {
+      testWidgets('the saved hearts stay when the renewal $name',
+          (tester) async {
+        signIn();
+
+        await openList(tester, [], api: api(renewal: status), then: () async {
+          expect(find.byIcon(Icons.favorite), findsOneWidget);
+          expect(find.byType(SnackBar), findsNothing);
+        });
+
+        expect(await savedHeart(), isTrue);
+      });
+    }
+
+    testWidgets('a waiting change still wins over the saved heart',
+        (tester) async {
+      signIn(waiting: [
+        {'trail_id': 1, 'favorite': false},
+      ]);
+
+      final requests = await openList(tester, [], api: api(renewal: 500),
+          then: () async {
+        expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      });
+
+      // Nothing can be sent without a token, so it isn't tried.
+      expect(requests.where((r) => r.url.path == '/api/trails/'),
+          hasLength(1));
+    });
+
+    testWidgets('a valid token is used as it is', (tester) async {
+      signIn(expiresIn: const Duration(hours: 1));
+
+      final requests = await openList(tester, [trail()], then: () async {
+        expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      });
+
+      expect(requests.map((r) => r.method), ['GET']);
+    });
   });
 
   testWidgets('an empty list says there are no trails', (tester) async {

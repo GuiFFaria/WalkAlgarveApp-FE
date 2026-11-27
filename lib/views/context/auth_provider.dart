@@ -66,7 +66,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// 🔹 Verifica se o token expirou
-  bool _isTokenExpired(String token) {
+  bool _isTokenExpired(String token, {Duration within = Duration.zero}) {
     print("⏱️ Checking if token is expired...");
     try {
       final parts = token.split('.');
@@ -91,7 +91,7 @@ class AuthProvider extends ChangeNotifier {
       print("🕒 Token expires at: $expiryDate");
       print("🕒 Current time: $now");
 
-      final expired = now.isAfter(expiryDate);
+      final expired = now.add(within).isAfter(expiryDate);
       print(expired ? "❌ Token expired." : "✅ Token still valid.");
       return expired;
     } catch (e) {
@@ -104,6 +104,16 @@ class AuthProvider extends ChangeNotifier {
   /// A session that only couldn't be renewed, as when offline, is kept.
   Future<void> _refreshAccessToken() async {
     if (await _renew() == _Renewal.rejected) await logout();
+  }
+
+  /// Renews an access token that has expired or is about to, and says whether
+  /// there is one to use. For calls the API answers without a 401.
+  Future<bool> ensureFreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    const margin = Duration(minutes: 1);
+    if (token != null && !_isTokenExpired(token, within: margin)) return true;
+    return tryRefreshAccessToken();
   }
 
   /// Renews the access token without signing out on failure, for callers that

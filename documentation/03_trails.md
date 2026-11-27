@@ -13,6 +13,8 @@ Displays all trails belonging to a specific zone:
 
 - Fetches from `GET /trails/?zone={id}`
 - Handles both plain JSON list and GeoJSON `features` array response formats
+- Renews an expired access token before fetching, since the API returns no favorites
+  to one. If it can't be renewed, the saved favorites are kept
 - Sends waiting favorite changes before fetching, and shows the ones still waiting
 - Pull-to-refresh support
 - Offline fallback with cached data and an offline banner
