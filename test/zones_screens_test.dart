@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:walk_algarve_app/l10n/app_localizations.dart';
 import 'package:walk_algarve_app/views/components/offline_banner/offline_banner_widget.dart';
 import 'package:walk_algarve_app/views/components/zone_card/zone_card_widget.dart';
+import 'package:walk_algarve_app/views/context/auth_provider.dart';
 import 'package:walk_algarve_app/views/context/locale_provider.dart';
 import 'package:walk_algarve_app/views/screens/zone_details/zone_details_screen.dart';
 import 'package:walk_algarve_app/views/screens/zones_list/zones_list_screen.dart';
@@ -31,6 +33,16 @@ Map<String, dynamic> zone(int id, String name, String municipality) => {
 final ludo = zone(1, 'Ludo', 'Faro');
 final benagil = zone(2, 'Benagil', 'Lagoa');
 
+/// A token as the app reads it: only the expiry matters.
+String token(Duration expiresIn) {
+  final expiry = DateTime.now().add(expiresIn).millisecondsSinceEpoch ~/ 1000;
+  final payload = base64Url.encode(utf8.encode('{"exp": $expiry}'));
+  return 'header.$payload.signature';
+}
+
+final valid = token(const Duration(hours: 1));
+final expired = token(const Duration(hours: -1));
+
 /// The API: every zone, and the ids of the ones the user owns.
 MockClient api(List<Map<String, dynamic>> zones, List<int> owned) =>
     MockClient((request) async => http.Response(
@@ -49,17 +61,24 @@ void connectivity(String result) {
       );
 }
 
+Widget app(Widget screen) => MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (_) => LocaleProvider()..setLocale(const Locale('en')),
+        ),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.light,
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: screen,
+      ),
+    );
+
 Future<void> show(WidgetTester tester, Widget screen) async {
-  await tester.pumpWidget(ChangeNotifierProvider(
-    create: (_) => LocaleProvider()..setLocale(const Locale('en')),
-    child: MaterialApp(
-      theme: AppTheme.light,
-      locale: const Locale('en'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: screen,
-    ),
-  ));
+  await tester.pumpWidget(app(screen));
   await tester.pumpAndSettle();
 }
 
@@ -82,6 +101,48 @@ Future<void> openZones(
   }, () => api(zones, owned));
 }
 
+/// Opens the list against an API that, like `/user/zones/`, answers 401 to any
+/// token but [accepted]. Returns the requests it received.
+Future<List<http.Request>> openSignedIn(
+  WidgetTester tester, {
+  required String accepted,
+  List<int> owned = const [],
+  Future<http.Response> Function()? renewal,
+  int userZonesStatus = 200,
+}) async {
+  final requests = <http.Request>[];
+  tallScreen(tester);
+
+  await http.runWithClient(
+    () => show(tester, const ZonesListScreen()),
+    () => MockClient((request) async {
+      requests.add(request);
+      if (request.url.path.endsWith('/auth/token/refresh/')) {
+        return renewal!();
+      }
+      if (!request.url.path.endsWith('/user/zones/')) {
+        return http.Response(jsonEncode([ludo, benagil]), 200);
+      }
+      if (request.headers['Authorization'] != 'Bearer $accepted') {
+        return http.Response('{"code": "token_not_valid"}', 401);
+      }
+      return http.Response(
+        jsonEncode({'zones_owned': owned}),
+        userZonesStatus,
+      );
+    }),
+  );
+  return requests;
+}
+
+Iterable<String> paths(List<http.Request> requests) =>
+    requests.map((request) => request.url.path);
+
+void expectOwned(WidgetTester tester, String name) {
+  expect(find.text(en.your_zones), findsOneWidget);
+  expect(top(tester, name), lessThan(top(tester, en.other_zones)));
+}
+
 double top(WidgetTester tester, String text) =>
     tester.getTopLeft(find.text(text).first).dy;
 
@@ -94,7 +155,7 @@ Future<void> filterBy(WidgetTester tester, String option) async {
 
 void main() {
   setUp(() {
-    SharedPreferences.setMockInitialValues({'auth_token': 'token'});
+    SharedPreferences.setMockInitialValues({'auth_token': valid});
     dotenv.testLoad(fileInput: 'API_BASE_URL=http://api.test/api');
     connectivity('wifi');
   });
@@ -225,6 +286,105 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(ZoneDetailsScreen), findsNothing);
     });
+  });
+
+  testWidgets('an expired token is renewed before owned zones are requested',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': expired,
+      'refresh_token': 'refresh',
+    });
+    final renewed = token(const Duration(hours: 2));
+
+    await openSignedIn(
+      tester,
+      accepted: renewed,
+      owned: [2],
+      renewal: () async => http.Response('{"access": "$renewed"}', 200),
+    );
+
+    expectOwned(tester, 'Benagil');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('cached_user_zones'), '[2]');
+  });
+
+  for (final (name, renewal) in <(String, Future<http.Response> Function())>[
+    ('is rejected', () async => http.Response('{}', 401)),
+    ('gets a server error', () async => http.Response('{}', 503)),
+    ('cannot reach the API', () async => throw http.ClientException('down')),
+  ]) {
+    testWidgets('saved zones stay owned when the renewal $name',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'auth_token': expired,
+        'refresh_token': 'refresh',
+        'cached_user_zones': '[1]',
+      });
+
+      await openSignedIn(tester, accepted: valid, renewal: renewal);
+
+      expectOwned(tester, 'Ludo');
+      expect(find.byType(OfflineBannerWidget), findsNothing);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('cached_user_zones'), '[1]');
+      expect(prefs.getString('refresh_token'), 'refresh');
+    });
+  }
+
+  testWidgets('a valid token is used as it is', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': valid,
+      'refresh_token': 'refresh',
+      'cached_user_zones': '[1]',
+    });
+
+    final requests =
+        await openSignedIn(tester, accepted: valid, owned: [2]);
+
+    expectOwned(tester, 'Benagil');
+    expect(paths(requests), isNot(contains('/api/auth/token/refresh/')));
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('cached_user_zones'), '[2]');
+  });
+
+  testWidgets('saved zones stay owned when their request fails',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': valid,
+      'cached_user_zones': '[1]',
+    });
+
+    await openSignedIn(tester, accepted: valid, userZonesStatus: 500);
+
+    expectOwned(tester, 'Ludo');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('cached_user_zones'), '[1]');
+  });
+
+  testWidgets('closing the list during a renewal is harmless', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': expired,
+      'refresh_token': 'refresh',
+    });
+    final renewal = Completer<http.Response>();
+
+    await http.runWithClient(
+      () async {
+        await tester.pumpWidget(app(const ZonesListScreen()));
+        await tester.pump();
+        await tester.pumpWidget(app(const SizedBox()));
+        renewal.complete(http.Response('{}', 503));
+        await tester.pumpAndSettle();
+      },
+      () => MockClient((request) async =>
+          request.url.path.endsWith('/auth/token/refresh/')
+              ? renewal.future
+              : request.url.path.endsWith('/user/zones/')
+                  ? renewal.future.then((_) => http.Response('{}', 401))
+                  : http.Response('[]', 200)),
+    );
+
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('a locked zone offers to buy it', (tester) async {
