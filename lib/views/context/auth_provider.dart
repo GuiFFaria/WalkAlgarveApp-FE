@@ -42,10 +42,12 @@ class AuthProvider extends ChangeNotifier {
     _refreshToken = refreshToken ?? _refreshToken;
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', _token!);
+    // The refresh token goes first, here and at logout: a renewal reply landing
+    // between the writes then sees that its session is over.
     if (_refreshToken != null) {
       await prefs.setString('refresh_token', _refreshToken!);
     }
+    await prefs.setString('auth_token', _token!);
 
     print("💾 Tokens saved to SharedPreferences.");
     notifyListeners();
@@ -56,8 +58,8 @@ class AuthProvider extends ChangeNotifier {
     _token = null;
     _refreshToken = null;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
     await prefs.remove('refresh_token');
+    await prefs.remove('auth_token');
     await prefs.remove('user');
     await prefs.remove('cached_user_zones');
     await TrailCache.clear();
@@ -138,6 +140,11 @@ class AuthProvider extends ChangeNotifier {
           )
           .timeout(const Duration(seconds: 15));
 
+      // A reply for a session that was signed out or replaced meanwhile.
+      if (prefs.getString('refresh_token') != refresh) {
+        return _Renewal.unavailable;
+      }
+
       if (response.statusCode != 200) {
         print("❌ Failed to refresh token: ${response.statusCode}");
         return response.statusCode == 401
@@ -148,7 +155,10 @@ class AuthProvider extends ChangeNotifier {
       final access = jsonDecode(response.body)['access'];
       if (access is! String || access.isEmpty) return _Renewal.unavailable;
 
-      await setToken(access, refreshToken: refresh);
+      // No await since the session check, so a logout cannot slip in between.
+      _token = access;
+      await prefs.setString('auth_token', access);
+      notifyListeners();
       return _Renewal.renewed;
     } catch (e) {
       print("❌ Exception while refreshing token: $e");
