@@ -54,3 +54,6 @@ The `AuthProvider` (ChangeNotifier) manages the full JWT lifecycle:
 | `_refreshAccessToken()` | Renews the token at startup; signs out only if the session is rejected |
 | `tryRefreshAccessToken()` | Renews the token without signing out on failure |
 | `ensureFreshToken()` | Renews a token that has expired or expires within a minute |
+
+A renewal reply is ignored when the user logged out or signed in again while it was on
+its way. It saves nothing and signs no one out.
